@@ -490,12 +490,12 @@
                 var harvesterDroneProduction = 0;
                 var wireDroneProduction = 0;
                 var combat = 0;
-                for (var i = 0; i < probeUsedTrust; ++i) {
+                for (var i = 0; i < probeTrust; ++i) {
                     if (hazardRemediation < 5) {
                         ++hazardRemediation;
                     } else if (selfReplication < 7) {
                         ++selfReplication;
-                    } else if (btn.btnRaiseProbeCombat.available && drifterCount > probeCount / 10 && combat < 5) {
+                    } else if (btn.btnRaiseProbeCombat.available && drifterCount > probeCount / 10 && combat < 7) {
                         ++combat;
                     } else if (clipRate === 0 && availableMatter === 0) {
                         if (speed <= exploration) {
