@@ -228,7 +228,7 @@
 
         // Phase 0
         if (phase === 0) {
-            if (wire < clipRate * 10) { // Somehow this can be a decimal value
+            if (wire < clipRate * 10 || wire < 1000) { // Somehow this can be a decimal value
                 if (btn.btnBuyWire?.available === true) {
                     console.log("Buying wire");
                     btn.btnBuyWire.click();
