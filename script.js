@@ -16,7 +16,7 @@
             if (element) {
                 btn[id] = element
                 // https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
-                btn[id].available = element.available === true && element.offsetParent !== null;
+                btn[id].available = element.disabled === false && element.offsetParent !== null;
             } else {
                 delete btn[id]
                 console.log(`Button ${id} has been removed`);
@@ -26,19 +26,19 @@
     loadButtons();
 
     // Keep the price from changing more than once per second - this stabilizes the metrics somewhat
-    var priceCanChange = true;
+    window.priceCanChange = true;
     function holdPrice() {
-        priceCanChange = false;
+        window.priceCanChange = false;
         var delay = -4.5 * margin + 1.225
         delay = 1000;
-        setTimeout(() => priceCanChange = true, delay);
+        setTimeout(() => window.priceCanChange = true, delay);
     }
 
     // We seem to be able to get more than one photonic chip if we accept these too fast, so adding a timeout
-    var canAcceptJob = true;
+    window.canAcceptJob = true;
     function holdJobs() {
-        canAcceptJob = false;
-        setTimeout(() => canAcceptJob = true, 1000);
+        window.canAcceptJob = false;
+        setTimeout(() => window.canAcceptJob = true, 1000);
     }
 
     function botLoop () {
@@ -70,7 +70,7 @@
         }
 
         // Jobs
-        if (canAcceptJob) {
+        if (window.canAcceptJob) {
             for (var project of activeProjects) {
                 var projectButton = btn[project.id];
                 if (projectButton?.available === true) {
@@ -233,7 +233,7 @@
                     console.log("Buying wire");
                     btn.btnBuyWire.click();
                     return
-                } else if (margin > .02 && priceCanChange) {
+                } else if (margin > .02 && window.priceCanChange) {
                     console.log("Lowering price");
                     btn.btnLowerPrice?.click();
                     holdPrice();
@@ -241,7 +241,7 @@
                 }
             }
 
-            if (priceCanChange) {
+            if (window.priceCanChange) {
                 if (clipRate === 0 || (clipRate > avgSales && margin > .02 && unsoldClips > clipRate * 30)) {
                     console.log("Lowering price");
                     btn.btnLowerPrice?.click();
