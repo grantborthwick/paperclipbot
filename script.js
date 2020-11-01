@@ -40,7 +40,10 @@
         loadButtons();
         
         extraOps = operations > 1000 * memory;
+
+        // todo: calculate rev or paperclip increase for each and figure out which helps more
         focus = margin > .05 ? "output" : "marketing";
+        
         phase = trust === 0
             ? btn.btnMakeProbe?.isVisible
                 ? 2
@@ -452,7 +455,7 @@
                 btn.btnInvest.click();
             }
 
-            if (btn.btnWithdraw?.available && portTotal > clips * 25 && bankroll > 0 && bankroll < clips) {
+            if (btn.btnWithdraw?.available && portTotal > clips * 4 && bankroll > 0 && bankroll < clips) {
                 console.log("Divesting");
                 btn.btnWithdraw.click();
             }
