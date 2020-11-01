@@ -299,7 +299,7 @@
                 ++wireDroneProduction;
             } else if (availableMatter && harvesterDroneProduction === 0) {
                 ++harvesterDroneProduction;
-            } else if (btn.btnRaiseProbeCombat?.isVisible && drifterCount > probeCount / 100 && combat < Math.max(9, selfReplication)) {
+            } else if (btn.btnRaiseProbeCombat?.isVisible && drifterCount > probeCount / 100 && combat < Math.max(9, selfReplication * 3 / 4)) {
                 ++combat;
             } else if (unusedClips > probeCost) {
                 ++selfReplication;
@@ -452,7 +452,7 @@
                 btn.btnInvest.click();
             }
 
-            if (btn.btnWithdraw?.available && portTotal > clips * 2 && bankroll > 0 && bankroll < clips) {
+            if (btn.btnWithdraw?.available && portTotal > clips * 25 && bankroll > 0 && bankroll < clips) {
                 console.log("Divesting");
                 btn.btnWithdraw.click();
             }
