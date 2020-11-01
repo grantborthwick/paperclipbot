@@ -16,7 +16,8 @@
             if (element) {
                 btn[id] = element
                 // https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
-                btn[id].available = element.disabled === false && element.offsetParent !== null;
+                btn[id].isVisible = element.offsetParent !== null;
+                btn[id].available = element.disabled === false && btn[id].isVisible;
             } else {
                 delete btn[id]
                 // console.log(`Button ${id} has been removed`);
@@ -34,66 +35,63 @@
         setTimeout(() => window.priceCanChange = true, delay);
     }
 
-    // We seem to be able to get more than one photonic chip if we accept these too fast, so adding a timeout
-    window.canAcceptJob = true;
-    function holdJobs() {
-        window.canAcceptJob = false;
-        setTimeout(() => window.canAcceptJob = true, 1000);
-    }
-
-    window.canChangeProbeLevels = true;
-    function holdProbeLevels() {
-        window.canChangeProbeLevels = false;
-        setTimeout(() => window.canChangeProbeLevels = true, 5000);
-    }
-
-    function botLoop () {
+    var extraOps, focus, phase;
+    function initialize() {
         loadButtons();
-
-        var extraOps = operations > 1000 * memory;
-        var focus = margin > .05 ? "output" : "marketing"
-
-        var phase = trust === 0
-            ? btn.btnMakeProbe?.offsetParent !== null
+        
+        extraOps = operations > 1000 * memory;
+        focus = margin > .05 ? "output" : "marketing";
+        phase = trust === 0
+            ? btn.btnMakeProbe?.isVisible
                 ? 2
                 : 1
             : 0;
+    }
 
+    if (!window.intervalIds) {
+        window.intervalIds = {};
+    } else {
+        for (var key of Object.keys(window.intervalIds)) {
+            clearInterval(window.intervalIds[key]);
+            delete window.intervalIds[key];
+        }
+    }
+    function scheduleLoop(name, timeout, callback, skipInit) {
+        if (window.intervalIds[name]) {
+            clearInterval(window.intervalIds[name]);
+        }
+        window.intervalIds[name] = setInterval(() => {
+            if (!skipInit) {
+                initialize();
+            }
+            callback();
+        }, timeout);
+    }
+
+    function delay(timeout = 0) {
+        return new Promise(resolve => setTimeout(resolve, timeout));
+    }
+
+    scheduleLoop("autoclipper", 0, () => {
         if (btn.btnMakePaperclip?.available) {
             btn.btnMakePaperclip.click();
-        }
-        if (btn.btnMakeProbe?.available) {
+        } else if (btn.btnMakeProbe?.available) {
             btn.btnMakeProbe.click();
         }
+    }, true);
 
-        if (btn.btnAddProc?.available) {
-            if (processors < 6) {
-                console.log("Increasing processors");
-                btn.btnAddProc?.click();
-            } else if (memory < 70) {
-                console.log("Increasing memory");
-                btn.btnAddMem?.click();
-            } else if (processors < 30) {
-                console.log("Increasing processors");
-                btn.btnAddProc?.click();
-            } else if (memory < 120) {
-                console.log("Increasing memory");
-                btn.btnAddMem?.click();
-            } else if (processors <= memory) {
-                console.log("Increasing processors");
-                btn.btnAddProc?.click();
-            } else {
-                console.log("Increasing memory");
-                btn.btnAddMem?.click();
-            }
-        }
-
-        // Jobs
-        if (window.canAcceptJob) {
-            for (var project of activeProjects) {
-                var projectButton = btn[project.id];
-                if (projectButton?.available) {
-                    var accept = false;
+    scheduleLoop("jobLoop", 1000, () => {
+        for (var project of activeProjects) {
+            var projectButton = btn[project.id];
+            if (projectButton?.available) {
+                var accept = false;
+                if (project.title.indexOf("Threnody for the Heroes of") !== -1) {
+                    if (btn.btnEntertainSwarm?.isVisible || btn.btnSynchSwarm?.isVisible) {
+                        accept = false;
+                    } else {
+                        accept = true;
+                    }
+                } else {
                     switch (project.title.trim()) {
                         case "Quantum Temporal Reversion": // We messed up
                             // reset();
@@ -169,7 +167,7 @@
                             break;
 
                         case "Algorithmic Trading": // 10,000 ops | Investing!
-                            accept = false;
+                            accept = extraOps;
                             break;
                         
                         case "Improved AutoClippers": // 750 ops | Increases AutoClipper performance 25%
@@ -223,7 +221,6 @@
                         case "Reboot the Swarm":
                         case "The OODA Loop":
                         case "Monument to the Driftwar Fallen":
-                        case "Threnody for the Heroes of Durenstein 1":
                         case "Glory":
                             accept = true;
                             break;
@@ -236,25 +233,138 @@
                         default:
                             console.log(`Unknown project ${project.title}`)
                     }
-                    if (accept) {
-                        console.log(`Accepting ${project.title.trim()}`);
-                        projectButton.click();
-                        holdJobs();
-                        break;
-                    }
+                }
+                if (accept) {
+                    console.log(`Accepting ${project.title.trim()}`);
+                    projectButton.click();
+                    break;
                 }
             }
         }
-
-        // Quantum computing
-        if (nextQchip) {
-            if (nextQchip > 0) {
-                // console.log(`Quantum: ${qChip0.value}`);
+    });
+    
+    var quantumClickLoopName = "quantumClick";
+    scheduleLoop("quantumCheck", 1000, () => {
+        if (window.intervalIds[quantumClickLoopName] || nextQchip < 1) {
+            return;
+        }
+        var value = 0;
+        qChips.forEach(chip => value += chip.value);
+        if (value > 0) {
+            // console.log(`Starting quantum loop ${value}`);
+            scheduleLoop(quantumClickLoopName, 0, () => {
                 var value = 0;
                 qChips.forEach(chip => value += chip.value);
                 if (value > 0) {
                     btn.btnQcompute.click();
+                } else {
+                    // console.log(`Ending quantum loop ${value}`);
+                    window.clearInterval(window.intervalIds[quantumClickLoopName]);
+                    delete window.intervalIds[quantumClickLoopName];
                 }
+            });
+        }
+    });
+    
+    var probeDesignRunning = false;
+    scheduleLoop("probeDesign", 1000, async () => {
+        if (probeDesignRunning) {
+            return;
+        }
+        
+        probeDesignRunning = true;
+        
+        var speed = 0;
+        var exploration = 0;
+        var selfReplication = 0;
+        var hazardRemediation = 0;
+        var factoryProduction = 0;
+        var harvesterDroneProduction = 0;
+        var wireDroneProduction = 0;
+        var combat = 0;
+        for (var i = 0; i < probeTrust; ++i) {
+            if (hazardRemediation < 5) {
+                ++hazardRemediation;
+            } else if (selfReplication < 7 && unusedClips > probeCost) {
+                ++selfReplication;
+            } else if (clipRate === 0 && availableMatter <= probeCost) {
+                if (speed <= exploration) {
+                    ++speed;
+                } else {
+                    ++exploration;
+                }
+            } else if (wire && factoryProduction === 0) {
+                ++factoryProduction;
+            } else if (acquiredMatter && wireDroneProduction === 0) {
+                ++wireDroneProduction;
+            } else if (availableMatter && harvesterDroneProduction === 0) {
+                ++harvesterDroneProduction;
+            } else if (btn.btnRaiseProbeCombat?.isVisible && drifterCount > probeCount / 100 && combat < Math.max(9, selfReplication)) {
+                ++combat;
+            } else if (unusedClips > probeCost) {
+                ++selfReplication;
+            } else {
+                ++combat;
+            }
+        }
+
+        /* console.log(
+            `speed: ${speed} | ` +
+            `exploration: ${exploration} | ` +
+            `selfReplication: ${selfReplication} | ` +
+            `hazardRemediation: ${hazardRemediation} | ` +
+            `factoryProduction: ${factoryProduction} | ` +
+            `factoryProduction: ${factoryProduction} | ` +
+            `harvesterDroneProduction: ${harvesterDroneProduction} | ` +
+            `wireDroneProduction: ${wireDroneProduction} | ` +
+            `combat: ${combat}`); */
+
+        var data = [
+            [speed,                    () => probeSpeed,  btn.btnRaiseProbeSpeed,  btn.btnLowerProbeSpeed],
+            [exploration,              () => probeNav,    btn.btnRaiseProbeNav,    btn.btnLowerProbeNav],
+            [selfReplication,          () => probeRep,    btn.btnRaiseProbeRep,    btn.btnLowerProbeRep],
+            [hazardRemediation,        () => probeHaz,    btn.btnRaiseProbeHaz,    btn.btnLowerProbeHaz],
+            [factoryProduction,        () => probeFac,    btn.btnRaiseProbeFac,    btn.btnLowerProbeFac],
+            [harvesterDroneProduction, () => probeHarv,   btn.btnRaiseProbeHarv,   btn.btnLowerProbeHarv],
+            [wireDroneProduction,      () => probeWire,   btn.btnRaiseProbeWire,   btn.btnLowerProbeWire],
+            [combat,                   () => probeCombat, btn.btnRaiseProbeCombat, btn.btnLowerProbeCombat]
+        ];
+        var toLower = data.filter(x => x[0] < x[1]());
+        var toRaise = data.filter(x => x[0] > x[1]());
+        for ([desired, current, raise, lower] of toLower) {
+            while (current() > desired && lower?.available) {
+                lower.click();
+            }
+        }
+        await delay(250);
+        for ([desired, current, raise, lower] of toRaise) {
+            while (current() < desired && raise?.available) {
+                raise.click();
+            }
+        }
+        probeDesignRunning = false;
+    });
+
+    scheduleLoop("botLoop", 10, () => {
+        if (btn.btnAddProc?.available) {
+            if (processors < 6) {
+                console.log("Increasing processors");
+                btn.btnAddProc?.click();
+            } else if (memory < 70) {
+                console.log("Increasing memory");
+                btn.btnAddMem?.click();
+            } else if (processors < 30) {
+                console.log("Increasing processors");
+                btn.btnAddProc?.click();
+            } else if (memory < 120) {
+                console.log("Increasing memory");
+                btn.btnAddMem?.click();
+            } else if (processors <= memory * 2) {
+                console.log("Increasing processors");
+                btn.btnAddProc?.click();
+            } else {
+                console.log("Increasing memory");
+                btn.btnAddMem?.click();
             }
         }
 
@@ -470,7 +580,11 @@
         // Phase 2
         if (phase === 2) {
             // todo: make this better
-            sliderElement.value = 100;
+            if (availableMatter === 0 && acquiredMatter === 0) {
+                sliderElement.value = 200;
+            } else {
+                sliderElement.value = 0;
+            }
 
             if (btn.btnIncreaseProbeTrust?.available) {
                 console.log("Increasing probe trust");
@@ -480,66 +594,6 @@
                 console.log("Increasing max trust");
                 btn.btnIncreaseMaxTrust.click();
             }
-
-            if (window.canChangeProbeLevels) {
-                var speed = 0;
-                var exploration = 0;
-                var selfReplication = 0;
-                var hazardRemediation = 0;
-                var factoryProduction = 0;
-                var harvesterDroneProduction = 0;
-                var wireDroneProduction = 0;
-                var combat = 0;
-                for (var i = 0; i < probeTrust; ++i) {
-                    if (hazardRemediation < 5) {
-                        ++hazardRemediation;
-                    } else if (selfReplication < 7) {
-                        ++selfReplication;
-                    } else if (btn.btnRaiseProbeCombat.available && drifterCount > probeCount / 10 && combat < 7) {
-                        ++combat;
-                    } else if (clipRate === 0 && availableMatter === 0) {
-                        if (speed <= exploration) {
-                            ++speed;
-                        } else {
-                            ++exploration;
-                        }
-                    } else if (wire && factoryProduction === 0) {
-                        ++factoryProduction;
-                    } else if (acquiredMatter && wireDroneProduction === 0) {
-                        ++wireDroneProduction;
-                    } else if (availableMatter && harvesterDroneProduction === 0) {
-                        ++harvesterDroneProduction;
-                    } else {
-                        ++selfReplication;
-                    }
-                }
-
-                for ([desired, current, raise, lower] of [
-                    [speed,                    probeSpeed,  btn.btnRaiseProbeSpeed,  btn.btnLowerProbeSpeed],
-                    [exploration,              probeNav,    btn.btnRaiseProbeNav,    btn.btnLowerProbeNav],
-                    [selfReplication,          probeRep,    btn.btnRaiseProbeRep,    btn.btnLowerProbeRep],
-                    [hazardRemediation,        probeHaz,    btn.btnRaiseProbeHaz,    btn.btnLowerProbeHaz],
-                    [factoryProduction,        probeFac,    btn.btnRaiseProbeFac,    btn.btnLowerProbeFac],
-                    [harvesterDroneProduction, probeHarv,   btn.btnRaiseProbeHarv,   btn.btnLowerProbeHarv],
-                    [wireDroneProduction,      probeWire,   btn.btnRaiseProbeWire,   btn.btnLowerProbeWire],
-                    [combat,                   probeCombat, btn.btnRaiseProbeCombat, btn.btnLowerProbeCombat]
-                ]) {
-                    if (current < desired && raise?.available) {
-                        raise.click();
-                    } else if (current > desired && lower?.available) {
-                        lower.click();
-                    }
-                }
-                holdProbeLevels();
-            }
         }
-        
-        return;
-    }
-
-    var timeout = 10;
-    if (window.runId) {
-        clearInterval(runId);
-    }
-    window.runId = setInterval(botLoop, timeout);  
+    });
 })();
