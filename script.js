@@ -191,7 +191,7 @@
                         case "New Strategy: BEAT LAST":
                         case "Theory of Mind": // double tournament cost and yomni generated
                             accept = false; // todo: figure out nuances of the strategies - leaving it on Random only levels up yomni really fast?
-                            accept = investmentLevel >= 8;
+                            accept = investLevel >= 8;
                             break;
 
                         // Phase 2
