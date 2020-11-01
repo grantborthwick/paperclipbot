@@ -4,7 +4,7 @@
         for (var button of document.getElementsByTagName("button")) {
             if (button.id) {
                 if (!btn.hasOwnProperty(button.id)) {
-                    console.log(`Found button ${button.id}`);
+                    // console.log(`Found button ${button.id}`);
                 }
                 btn[button.id] = button;
             } else {
@@ -19,7 +19,7 @@
                 btn[id].available = element.disabled === false && element.offsetParent !== null;
             } else {
                 delete btn[id]
-                console.log(`Button ${id} has been removed`);
+                // console.log(`Button ${id} has been removed`);
             }
         }
     }
@@ -41,23 +41,42 @@
         setTimeout(() => window.canAcceptJob = true, 1000);
     }
 
+    window.canChangeProbeLevels = true;
+    function holdProbeLevels() {
+        window.canChangeProbeLevels = false;
+        setTimeout(() => window.canChangeProbeLevels = true, 5000);
+    }
+
     function botLoop () {
         loadButtons();
 
         var extraOps = operations > 1000 * memory;
         var focus = margin > .05 ? "output" : "marketing"
 
-        var phase = trust === 0 ? 1 : 0;
+        var phase = trust === 0
+            ? btn.btnMakeProbe?.offsetParent !== null
+                ? 2
+                : 1
+            : 0;
 
-        if (btn.btnMakePaperclip?.available === true) {
-            btn.btnMakePaperclip?.click();
+        if (btn.btnMakePaperclip?.available) {
+            btn.btnMakePaperclip.click();
+        }
+        if (btn.btnMakeProbe?.available) {
+            btn.btnMakeProbe.click();
         }
 
-        if (btn.btnAddProc?.available === true) {
+        if (btn.btnAddProc?.available) {
             if (processors < 6) {
                 console.log("Increasing processors");
                 btn.btnAddProc?.click();
             } else if (memory < 70) {
+                console.log("Increasing memory");
+                btn.btnAddMem?.click();
+            } else if (processors < 30) {
+                console.log("Increasing processors");
+                btn.btnAddProc?.click();
+            } else if (memory < 120) {
                 console.log("Increasing memory");
                 btn.btnAddMem?.click();
             } else if (processors <= memory) {
@@ -73,7 +92,7 @@
         if (window.canAcceptJob) {
             for (var project of activeProjects) {
                 var projectButton = btn[project.id];
-                if (projectButton?.available === true) {
+                if (projectButton?.available) {
                     var accept = false;
                     switch (project.title.trim()) {
                         case "Quantum Temporal Reversion": // We messed up
@@ -185,6 +204,32 @@
                         case "Harvester Drones":
                         case "Wire Drones":
                         case "Clip Factories":
+                        case "Swarm Computing":
+                        case "Momentum":
+                        case "Upgraded Factories":
+                        case "Drone flocking: collision avoidance":
+                        case "Drone flocking: alignment":
+                        case "Hyperspeed Factories":
+                        case "Self-correcting Supply Chain":
+                        case "Drone Flocking: Adversarial Cohesion":
+                        case "Space Exploration":
+                            accept = true;
+                            break;
+
+                        // Phase 3
+                        case "Elliptic Hull Polytopes":
+                        case "Combat":
+                        case "Name the battles":
+                        case "Reboot the Swarm":
+                        case "The OODA Loop":
+                        case "Monument to the Driftwar Fallen":
+                        case "Threnody for the Heroes of Durenstein 1":
+                        case "Glory":
+                            accept = true;
+                            break;
+
+                        case "Memory release":
+                            // Messed up :(
                             accept = true;
                             break;
 
@@ -214,22 +259,31 @@
         }
 
         // Tournaments
-        if (btn.btnNewTournament?.available === true) {
+        if (btn.btnNewTournament?.available) {
             btn.btnNewTournament.click();
             // console.log("New tournament");
         } else if (stratPickerElement.selectedIndex === 0) {
             stratPickerElement.selectedIndex = 1;
         } else if (stratPickerElement.selectedIndex === 1 && stratPickerElement.children.length >= 5) {
             stratPickerElement.selectedIndex = 4;
-        } else if (btn.btnRunTournament?.available === true) {
+        } else if (btn.btnRunTournament?.available) {
             btn.btnRunTournament.click();
             // console.log("New tournament");
+        }
+
+        if (btn.btnSynchSwarm?.available) {
+            console.log("Synchronizing the swarm");
+            btn.btnSynchSwarm.click();
+        }
+        if (btn.btnEntertainSwarm?.available) {
+            console.log("Entertaining the swarm");
+            btn.btnEntertainSwarm.click();
         }
 
         // Phase 0
         if (phase === 0) {
             if (wire < clipRate * 10 || wire < 1000) { // Somehow this can be a decimal value
-                if (btn.btnBuyWire?.available === true) {
+                if (btn.btnBuyWire?.available) {
                     console.log("Buying wire");
                     btn.btnBuyWire.click();
                     return
@@ -257,24 +311,24 @@
 
             // If we're selling really well, increase production
             if (focus === "output") {
-                if (btn.btnMakeMegaClipper?.available === true && wire > clipRate * 5) {
+                if (btn.btnMakeMegaClipper?.available && wire > clipRate * 5) {
                     btn.btnMakeMegaClipper.click();
                     console.log("Making a MegaClipper")
                     return;
-                } else if (!megaClipperFlag && btn.btnMakeClipper?.available === true && wire > clipRate * 5) {
+                } else if (!megaClipperFlag && btn.btnMakeClipper?.available && wire > clipRate * 5) {
                     btn.btnMakeClipper.click();
                     console.log("Making an AutoClipper")
                     return;
                 }
             } else { // otherwise, focus on marketing
-                if (btn.btnExpandMarketing?.available === true) {
+                if (btn.btnExpandMarketing?.available) {
                     btn.btnExpandMarketing.click();
                     console.log("Increasing marketing")
                     return;
                 }
             }
 
-            if (btn.btnImproveInvestments?.available === true && yomi > investUpgradeCost + 15000) {
+            if (btn.btnImproveInvestments?.available && yomi > investUpgradeCost + 15000) {
                 btn.btnImproveInvestments.click();
                 console.log("Improving investments");
             }
@@ -283,12 +337,12 @@
                 investStratElement.selectedIndex = 2;
             }
 
-            if (btn.btnInvest?.available === true && investLevel >= 5 && portTotal < clips / 10 && funds > 10000) {
+            if (btn.btnInvest?.available && investLevel >= 5 && portTotal < clips / 10 && funds > 10000) {
                 console.log("Investing");
                 btn.btnInvest.click();
             }
 
-            if (btn.btnWithdraw?.available === true && portTotal > clips * 2 && bankroll > 0 && bankroll < clips) {
+            if (btn.btnWithdraw?.available && portTotal > clips * 2 && bankroll > 0 && bankroll < clips) {
                 console.log("Divesting");
                 btn.btnWithdraw.click();
             }
@@ -296,39 +350,187 @@
 
         // Phase 1
         if (phase === 1) {
+            var capacity = batteryLevel * batterySize / 100;
             var supply = farmLevel * farmRate / 100;
-            var dDemand = (harvesterLevel * dronePowerRate/100) + (wireDroneLevel * dronePowerRate/100);
-            var fDemand = (factoryLevel * factoryPowerRate/100);
-            var demand = dDemand + fDemand;
-
-            if (supply <= demand) {
-                if (btn.btnMakeFarm?.available === true && farmLevel === 0 || supply <= demand) {
-                    console.log("Making 1 farm");
-                    btn.btnMakeFarm.click();
+            if (availableMatter === 0 && acquiredMatter === 0 && wire === 0) {
+                btn.btnFactoryReboot?.click();
+                btn.btnWireDroneReboot?.click();
+                btn.btnHarvesterReboot?.click();
+                if (capacity > 100000) {
+                    btn.btnBatteryReboot?.click();
+                } else if (capacity < 100000) {
+                    btn.btnMakeBattery.click();
+                } else if (capacity === 100000) {
+                    if (storedPower / 100 === capacity) {
+                        btn.btnFarmReboot?.click();
+                    } else {
+                        btn.btnMakeFarm.click();
+                    }
                 }
             } else {
-                var capacity = batteryLevel * batterySize / 100;
-                if (btn.btnMakeBattery?.available === true && (batteryLevel === 0 || capacity < demand * 60)) {
-                    console.log("Making 1 battery");
-                    btn.btnMakeBattery.click();
-                } else {
-                    if (btn.btnMakeHarvester?.available === true && harvesterLevel === 0) {
-                        console.log("Making 1 harvester");
-                        btn.btnMakeHarvester.click();
+                var dDemand = (harvesterLevel * dronePowerRate/100) + (wireDroneLevel * dronePowerRate/100);
+                var fDemand = (factoryLevel * factoryPowerRate/100);
+                var demand = dDemand + fDemand;
+                
+                // Logic copied from acquireMatter()
+                var matterRate = 0;
+                if (availableMatter > 0) {
+                    var dbsth = 1;
+                    if (droneBoost>1){
+                        dbsth = droneBoost * Math.floor(harvesterLevel);
                     }
-                    if (btn.btnMakeHarvester?.available === true && harvesterLevel === 0) {
-                        console.log("Making 1 harvester drone");
-                        btn.btnMakeHarvester.click();
+                    var mtr = powMod * dbsth * Math.floor(harvesterLevel) * harvesterRate;
+                    mtr = mtr * ((200 - sliderPos) / 100);
+                    if (mtr > availableMatter){
+                        mtr = availableMatter;
                     }
-                    if (btn.btnMakeWireDrone?.available === true && wireDroneLevel === 0) {
-                        console.log("Making 1 wire drone");
-                        btn.btnMakeWireDrone.click();
+                    matterRate = mtr * 100;
+                }
+
+                // Logic copied from processMatter()
+                var wireRate = 0;
+                if (acquiredMatter > 0) {
+                    var dbstw = 1;
+                    if (droneBoost > 1) {
+                        dbstw = droneBoost * Math.floor(wireDroneLevel);
                     }
-                    if (btn.btnMakeFactory?.available === true && factoryLevel === 0) {
+                    var a = powMod * dbstw * Math.floor(wireDroneLevel) * wireDroneRate;
+                    a = a * ((200 - sliderPos) / 100);
+                    if (a > acquiredMatter) {
+                        a = acquiredMatter;
+                    }
+                    wireRate = a * 100;
+                }
+
+                if (supply <= demand) {
+                    if (btn.btnFarmx100?.available) {
+                        console.log("Making 100 farms");
+                        btn.btnFarmx100.click();
+                    } else if (btn.btnFarmx10?.available) {
+                        console.log("Making 10 farms");
+                        btn.btnFarmx10.click();
+                    } else if (btn.btnMakeFarm?.available) {
+                        console.log("Making 1 farm");
+                        btn.btnMakeFarm.click();
+                    }
+                } else if (capacity <= demand * 60) {
+                    if (btn.btnBatteryx100?.available) {
+                        console.log("Making 100 batteries");
+                        btn.btnBatteryx100.click();
+                    } else if (btn.btnBatteryx10?.available) {
+                        console.log("Making 10 batteries");
+                        btn.btnBatteryx10.click();
+                    } else if (btn.btnMakeBattery?.available) {
+                        console.log("Making 1 battery");
+                        btn.btnMakeBattery.click();
+                    }
+                } else if (availableMatter === 0 || (clipRate <= wireRate && wire > 0)) {
+                    if (btn.btnMakeFactory?.available) {
                         console.log("Making 1 factory");
                         btn.btnMakeFactory.click();
+                    } else if (sliderElement.value < 200) {
+                        sliderElement.value += 1
+                    }
+                } else if (wireRate <= matterRate && acquiredMatter > 0) {
+                    if (btn.btnWireDronex1000?.available) {
+                        console.log("Making 1000 wire drones");
+                        btn.btnWireDronex1000.click();
+                    } else if (btn.btnWireDronex100?.available) {
+                        console.log("Making 100 wire drones");
+                        btn.btnWireDronex100.click();
+                    } else if (btn.btnWireDronex10?.available) {
+                        console.log("Making 10 wire drones");
+                        btn.btnWireDronex10.click();
+                    } else if (btn.btnMakeWireDrone?.available) {
+                        console.log("Making 1 wire drone");
+                        btn.btnMakeWireDrone.click();
+                    } else if (sliderElement.value > 0) {
+                        sliderElement.value -= 1
+                    }
+                } else {
+                    if (btn.btnHarvesterx1000?.available) {
+                        console.log("Making 1000 harvester drones");
+                        btn.btnHarvesterx1000.click();
+                    } else if (btn.btnHarvesterx100?.available) {
+                        console.log("Making 100 harvester drones");
+                        btn.btnHarvesterx100.click();
+                    } else if (btn.btnHarvesterx10?.available) {
+                        console.log("Making 10 harvester drones");
+                        btn.btnHarvesterx10.click();
+                    } else if (btn.btnMakeHarvester?.available) {
+                        console.log("Making 1 harvester drone");
+                        btn.btnMakeHarvester.click();
+                    } else if (sliderElement.value > 0) {
+                        sliderElement.value -= 1
                     }
                 }
+            }
+        }
+
+        // Phase 2
+        if (phase === 2) {
+            // todo: make this better
+            sliderElement.value = 100;
+
+            if (btn.btnIncreaseProbeTrust?.available) {
+                console.log("Increasing probe trust");
+                btn.btnIncreaseProbeTrust.click();
+            }
+            if (btn.btnIncreaseMaxTrust?.available) {
+                console.log("Increasing max trust");
+                btn.btnIncreaseMaxTrust.click();
+            }
+
+            if (window.canChangeProbeLevels) {
+                var speed = 0;
+                var exploration = 0;
+                var selfReplication = 0;
+                var hazardRemediation = 0;
+                var factoryProduction = 0;
+                var harvesterDroneProduction = 0;
+                var wireDroneProduction = 0;
+                var combat = 0;
+                for (var i = 0; i < probeUsedTrust; ++i) {
+                    if (hazardRemediation < 5) {
+                        ++hazardRemediation;
+                    } else if (selfReplication < 7) {
+                        ++selfReplication;
+                    } else if (btn.btnRaiseProbeCombat.available && drifterCount > probeCount / 10 && combat < 5) {
+                        ++combat;
+                    } else if (clipRate === 0 && availableMatter === 0) {
+                        if (speed <= exploration) {
+                            ++speed;
+                        } else {
+                            ++exploration;
+                        }
+                    } else if (wire && factoryProduction === 0) {
+                        ++factoryProduction;
+                    } else if (acquiredMatter && wireDroneProduction === 0) {
+                        ++wireDroneProduction;
+                    } else if (availableMatter && harvesterDroneProduction === 0) {
+                        ++harvesterDroneProduction;
+                    } else {
+                        ++selfReplication;
+                    }
+                }
+
+                for ([desired, current, raise, lower] of [
+                    [speed,                    probeSpeed,  btn.btnRaiseProbeSpeed,  btn.btnLowerProbeSpeed],
+                    [exploration,              probeNav,    btn.btnRaiseProbeNav,    btn.btnLowerProbeNav],
+                    [selfReplication,          probeRep,    btn.btnRaiseProbeRep,    btn.btnLowerProbeRep],
+                    [hazardRemediation,        probeHaz,    btn.btnRaiseProbeHaz,    btn.btnLowerProbeHaz],
+                    [factoryProduction,        probeFac,    btn.btnRaiseProbeFac,    btn.btnLowerProbeFac],
+                    [harvesterDroneProduction, probeHarv,   btn.btnRaiseProbeHarv,   btn.btnLowerProbeHarv],
+                    [wireDroneProduction,      probeWire,   btn.btnRaiseProbeWire,   btn.btnLowerProbeWire],
+                    [combat,                   probeCombat, btn.btnRaiseProbeCombat, btn.btnLowerProbeCombat]
+                ]) {
+                    if (current < desired && raise?.available) {
+                        raise.click();
+                    } else if (current > desired && lower?.available) {
+                        lower.click();
+                    }
+                }
+                holdProbeLevels();
             }
         }
         
