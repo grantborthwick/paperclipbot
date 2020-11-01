@@ -1,2 +1,4 @@
 # paperclipbot
-Play around with automating playing the paper-clip game
+Automating the paper-clip game
+
+https://www.decisionproblem.com/paperclips/index2.html
