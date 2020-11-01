@@ -15,6 +15,8 @@
             var element = document.getElementById(id);
             if (element) {
                 btn[id] = element
+                // https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
+                btn[id].available = element.available === true && element.offsetParent !== null;
             } else {
                 delete btn[id]
                 console.log(`Button ${id} has been removed`);
@@ -45,11 +47,13 @@
         var extraOps = operations > 1000 * memory;
         var focus = margin > .05 ? "output" : "marketing"
 
-        if (btn.btnMakePaperclip?.disabled === false) {
+        var phase = trust === 0 ? 1 : 0;
+
+        if (btn.btnMakePaperclip?.available === true) {
             btn.btnMakePaperclip?.click();
         }
 
-        if (btn.btnAddProc?.disabled === false) {
+        if (btn.btnAddProc?.available === true) {
             if (processors < 6) {
                 console.log("Increasing processors");
                 btn.btnAddProc?.click();
@@ -65,10 +69,11 @@
             }
         }
 
+        // Jobs
         if (canAcceptJob) {
             for (var project of activeProjects) {
                 var projectButton = btn[project.id];
-                if (projectButton?.disabled === false) {
+                if (projectButton?.available === true) {
                     var accept = false;
                     switch (project.title.trim()) {
                         case "Quantum Temporal Reversion": // We messed up
@@ -128,7 +133,9 @@
                             accept = wire < clipRate * 10 || extraOps;
                             break;
 
-                        case "WireBuyer": // hah!
+                        // Nope :)
+                        case "WireBuyer":
+                        case "AutoTourney":
                             accept = false;
                             break;
 
@@ -177,6 +184,7 @@
                         case "Nanoscale Wire Production":
                         case "Harvester Drones":
                         case "Wire Drones":
+                        case "Clip Factories":
                             accept = true;
                             break;
 
@@ -193,6 +201,7 @@
             }
         }
 
+        // Quantum computing
         if (nextQchip) {
             if (nextQchip > 0) {
                 // console.log(`Quantum: ${qChip0.value}`);
@@ -204,81 +213,123 @@
             }
         }
 
-        if (btn.btnNewTournament?.disabled === false) {
+        // Tournaments
+        if (btn.btnNewTournament?.available === true) {
             btn.btnNewTournament.click();
             // console.log("New tournament");
         } else if (stratPickerElement.selectedIndex === 0) {
             stratPickerElement.selectedIndex = 1;
         } else if (stratPickerElement.selectedIndex === 1 && stratPickerElement.children.length >= 5) {
             stratPickerElement.selectedIndex = 4;
-        } else if (btn.btnRunTournament?.disabled === false) {
+        } else if (btn.btnRunTournament?.available === true) {
             btn.btnRunTournament.click();
             // console.log("New tournament");
         }
 
-        if (wire < clipRate * 10) { // Somehow this can be a decimal value
-            if (btn.btnBuyWire?.disabled === false) {
-                console.log("Buying wire");
-                btn.btnBuyWire.click();
-                return
-            } else if (margin > .02 && priceCanChange) {
-                console.log("Lowering price");
-                btn.btnLowerPrice?.click();
-                holdPrice();
-                return;
+        // Phase 0
+        if (phase === 0) {
+            if (wire < clipRate * 10) { // Somehow this can be a decimal value
+                if (btn.btnBuyWire?.available === true) {
+                    console.log("Buying wire");
+                    btn.btnBuyWire.click();
+                    return
+                } else if (margin > .02 && priceCanChange) {
+                    console.log("Lowering price");
+                    btn.btnLowerPrice?.click();
+                    holdPrice();
+                    return;
+                }
+            }
+
+            if (priceCanChange) {
+                if (clipRate === 0 || (clipRate > avgSales && margin > .02 && unsoldClips > clipRate * 30)) {
+                    console.log("Lowering price");
+                    btn.btnLowerPrice?.click();
+                    holdPrice();
+                    return;
+                } else if (clipRate !== 0 && clipRate < avgSales || margin < .02 || unsoldClips < clipRate * 30) {
+                    console.log("Raising price");
+                    btn.btnRaisePrice?.click();
+                    holdPrice();
+                    return;
+                }
+            }
+
+            // If we're selling really well, increase production
+            if (focus === "output") {
+                if (btn.btnMakeMegaClipper?.available === true && wire > clipRate * 5) {
+                    btn.btnMakeMegaClipper.click();
+                    console.log("Making a MegaClipper")
+                    return;
+                } else if (!megaClipperFlag && btn.btnMakeClipper?.available === true && wire > clipRate * 5) {
+                    btn.btnMakeClipper.click();
+                    console.log("Making an AutoClipper")
+                    return;
+                }
+            } else { // otherwise, focus on marketing
+                if (btn.btnExpandMarketing?.available === true) {
+                    btn.btnExpandMarketing.click();
+                    console.log("Increasing marketing")
+                    return;
+                }
+            }
+
+            if (btn.btnImproveInvestments?.available === true && yomi > investUpgradeCost + 15000) {
+                btn.btnImproveInvestments.click();
+                console.log("Improving investments");
+            }
+
+            if (investStratElement.selectedIndex === 0) {
+                investStratElement.selectedIndex = 2;
+            }
+
+            if (btn.btnInvest?.available === true && investLevel >= 5 && portTotal < clips / 10 && funds > 10000) {
+                console.log("Investing");
+                btn.btnInvest.click();
+            }
+
+            if (btn.btnWithdraw?.available === true && portTotal > clips * 2 && bankroll > 0 && bankroll < clips) {
+                console.log("Divesting");
+                btn.btnWithdraw.click();
             }
         }
 
-        if (priceCanChange) {
-            if (clipRate > avgSales && margin > .02 && unsoldClips > clipRate * 30) {
-                console.log("Lowering price");
-                btn.btnLowerPrice?.click();
-                holdPrice();
-                return;
-            } else if (clipRate !== 0 && clipRate < avgSales || margin < .02 || unsoldClips < clipRate * 30) {
-                console.log("Raising price");
-                btn.btnRaisePrice?.click();
-                holdPrice();
-                return;
+        // Phase 1
+        if (phase === 1) {
+            var supply = farmLevel * farmRate / 100;
+            var dDemand = (harvesterLevel * dronePowerRate/100) + (wireDroneLevel * dronePowerRate/100);
+            var fDemand = (factoryLevel * factoryPowerRate/100);
+            var demand = dDemand + fDemand;
+
+            if (supply <= demand) {
+                if (btn.btnMakeFarm?.available === true && farmLevel === 0 || supply <= demand) {
+                    console.log("Making 1 farm");
+                    btn.btnMakeFarm.click();
+                }
+            } else {
+                var capacity = batteryLevel * batterySize / 100;
+                if (btn.btnMakeBattery?.available === true && (batteryLevel === 0 || capacity < demand * 60)) {
+                    console.log("Making 1 battery");
+                    btn.btnMakeBattery.click();
+                } else {
+                    if (btn.btnMakeHarvester?.available === true && harvesterLevel === 0) {
+                        console.log("Making 1 harvester");
+                        btn.btnMakeHarvester.click();
+                    }
+                    if (btn.btnMakeHarvester?.available === true && harvesterLevel === 0) {
+                        console.log("Making 1 harvester drone");
+                        btn.btnMakeHarvester.click();
+                    }
+                    if (btn.btnMakeWireDrone?.available === true && wireDroneLevel === 0) {
+                        console.log("Making 1 wire drone");
+                        btn.btnMakeWireDrone.click();
+                    }
+                    if (btn.btnMakeFactory?.available === true && factoryLevel === 0) {
+                        console.log("Making 1 factory");
+                        btn.btnMakeFactory.click();
+                    }
+                }
             }
-        }
-
-        // If we're selling really well, increase production
-        if (focus === "output") {
-            if (btn.btnMakeMegaClipper?.disabled === false && wire > clipRate * 5) {
-                btn.btnMakeMegaClipper.click();
-                console.log("Making a MegaClipper")
-                return;
-            } else if (!megaClipperFlag && btn.btnMakeClipper?.disabled === false && wire > clipRate * 5) {
-                btn.btnMakeClipper.click();
-                console.log("Making an AutoClipper")
-                return;
-            }
-        } else { // otherwise, focus on marketing
-            if (btn.btnExpandMarketing?.disabled === false) {
-                btn.btnExpandMarketing.click();
-                console.log("Increasing marketing")
-                return;
-            }
-        }
-
-        if (btn.btnImproveInvestments?.disabled === false && yomi > investUpgradeCost + 15000) {
-            btn.btnImproveInvestments.click();
-            console.log("Improving investments");
-        }
-
-        if (investStratElement.selectedIndex === 0) {
-            investStratElement.selectedIndex = 2;
-        }
-
-        if (btn.btnInvest?.disabled === false && investLevel >= 5 && portTotal < clips / 10 && funds > 10000) {
-            console.log("Investing");
-            btn.btnInvest.click();
-        }
-
-        if (btn.btnWithdraw?.disabled === false && portTotal > clips * 2 && bankroll > 0 && bankroll < clips) {
-            console.log("Divesting");
-            btn.btnWithdraw.click();
         }
         
         return;
