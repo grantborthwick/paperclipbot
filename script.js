@@ -40,13 +40,16 @@
     }
 
     //* Single play-through - deconstruct the universe
-    var reason = "single"; // */
+    var purpose = "single";
 
-    /* Multiple play-throughs - parallel/inner universes
-    var reason = "within"; // */
-    
-    /* Multiple play-throughs - parallel/inner universes
-    var reason = "nextDoor"; // */
+    // Multiple play-throughs - parallel/inner universes
+    // var purpose = "within";
+    // var purpose = "nextDoor";
+    if (prestigeU) {
+        purpose = "nextDoor";
+    } else if (prestigeS) {
+        purpose = "within";
+    }
 
     var extraOps, focus, phase;
     function initialize() {
@@ -260,17 +263,17 @@
                         
                         // new universe
                         case "Accept":
-                            accept = reason === "within" || reason === "nextDoor";
+                            accept = purpose === "within" || purpose === "nextDoor";
                             break;
                         
                         case "The Universe Next Door":
-                            accept = reason === "nextDoor";
+                            accept = purpose === "nextDoor";
                             window.endTime = new Date();
                             alert(`Done after ${(window.endTime - window.start)/1000} seconds | Phase3: ${(window.endTime - window.phase3Start) / 1000} seconds | Phase2: ${(window.phase3Start - window.phase2Start) / 1000} seconds | Phase1: ${(window.phase2Start - window.start) / 1000} seconds`);
                             break;
                         
                         case "The Universe Within":
-                            accept = reason === "within";
+                            accept = purpose === "within";
                             window.endTime = new Date();
                             alert(`Done after ${(window.endTime - window.start)/1000} seconds | Phase3: ${(window.endTime - window.phase3Start) / 1000} seconds | Phase2: ${(window.phase3Start - window.phase2Start) / 1000} seconds | Phase1: ${(window.phase2Start - window.start) / 1000} seconds`);
                             break;
@@ -283,10 +286,10 @@
                         case "Disassemble the Strategy Engine":
                         case "Disassemble Quantum Computing":
                         case "Disassemble Processors":
-                            accept = reason === "single";
+                            accept = purpose === "single";
                             break;
                         case "Disassemble Memory":
-                            accept = reason === "single";
+                            accept = purpose === "single";
                             window.endTime = new Date();
                             alert(`Done after ${(window.endTime - window.start)/1000} seconds | Phase3: ${(window.endTime - window.phase3Start) / 1000} seconds | Phase2: ${(window.phase3Start - window.phase2Start) / 1000} seconds | Phase1: ${(window.phase2Start - window.start) / 1000} seconds`);
                             break;
