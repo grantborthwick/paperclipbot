@@ -1,4 +1,8 @@
 (() => {
+    // This won't persist if the browser is refreshed for now
+    if (!window.start) {
+        window.start = new Date();
+    }
     window.btn = {};
     function loadButtons() {
         for (var button of document.getElementsByTagName("button")) {
@@ -35,10 +39,10 @@
         setTimeout(() => window.priceCanChange = true, delay);
     }
 
-    /* Single play-through - deconstruct the universe
+    //* Single play-through - deconstruct the universe
     var reason = "single"; // */
 
-    //* Multiple play-throughs - parallel/inner universes
+    /* Multiple play-throughs - parallel/inner universes
     var reason = "within"; // */
     
     /* Multiple play-throughs - parallel/inner universes
@@ -206,8 +210,12 @@
                             accept = investLevel >= 8;
                             break;
 
-                        // Phase 2
                         case "Release the HypnoDrones":
+                            window.phase2Start = new Date();
+                            console.log(`Phase1 done after  ${(window.phase2Start - window.start) / 1000} seconds`);
+                            break;
+
+                        // Phase 2
                         case "Tóth Tubule Enfolding":
                         case "Power Grid":
                         case "Nanoscale Wire Production":
@@ -222,8 +230,12 @@
                         case "Hyperspeed Factories":
                         case "Self-correcting Supply Chain":
                         case "Drone Flocking: Adversarial Cohesion":
-                        case "Space Exploration":
                         case "Strategic Attachment":
+                            accept = true;
+                        
+                        case "Space Exploration":
+                            window.phase3Start = new Date();
+                            console.log(`Phase2 done after ${(window.phase3Start - window.start) / 1000} | Phase2: ${(window.phase3Start - window.phase2Start) / 1000} seconds | Phase1: ${(window.phase2Start - window.start) / 1000} seconds`);
                             accept = true;
                             break;
 
@@ -253,10 +265,14 @@
                         
                         case "The Universe Next Door":
                             accept = reason === "nextDoor";
+                            window.endTime = new Date();
+                            alert(`Done after ${(window.endTime - window.start)/1000} seconds | Phase3: ${(window.endTime - window.phase3Start) / 1000} seconds | Phase2: ${(window.phase3Start - window.phase2Start) / 1000} seconds | Phase1: ${(window.phase2Start - window.start) / 1000} seconds`);
                             break;
                         
                         case "The Universe Within":
                             accept = reason === "within";
+                            window.endTime = new Date();
+                            alert(`Done after ${(window.endTime - window.start)/1000} seconds | Phase3: ${(window.endTime - window.phase3Start) / 1000} seconds | Phase2: ${(window.phase3Start - window.phase2Start) / 1000} seconds | Phase1: ${(window.phase2Start - window.start) / 1000} seconds`);
                             break;
                         
                         // dismantle everything
@@ -267,8 +283,12 @@
                         case "Disassemble the Strategy Engine":
                         case "Disassemble Quantum Computing":
                         case "Disassemble Processors":
+                            accept = reason === "single";
+                            break;
                         case "Disassemble Memory":
                             accept = reason === "single";
+                            window.endTime = new Date();
+                            alert(`Done after ${(window.endTime - window.start)/1000} seconds | Phase3: ${(window.endTime - window.phase3Start) / 1000} seconds | Phase2: ${(window.phase3Start - window.phase2Start) / 1000} seconds | Phase1: ${(window.phase2Start - window.start) / 1000} seconds`);
                             break;
 
                         case "Memory release":
