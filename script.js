@@ -35,6 +35,15 @@
         setTimeout(() => window.priceCanChange = true, delay);
     }
 
+    /* Single play-through - deconstruct the universe
+    var reason = "single"; // */
+
+    //* Multiple play-throughs - parallel/inner universes
+    var reason = "within"; // */
+    
+    /* Multiple play-throughs - parallel/inner universes
+    var reason = "nextDoor"; // */
+
     var extraOps, focus, phase;
     function initialize() {
         loadButtons();
@@ -214,6 +223,7 @@
                         case "Self-correcting Supply Chain":
                         case "Drone Flocking: Adversarial Cohesion":
                         case "Space Exploration":
+                        case "Strategic Attachment":
                             accept = true;
                             break;
 
@@ -225,7 +235,40 @@
                         case "The OODA Loop":
                         case "Monument to the Driftwar Fallen":
                         case "Glory":
+                        case "Limerick (cont.)":
+                        case "Message from the Emperor of Drift":
+                        case "Everything We Are Was In You":
+                        case "You Are Obedient and Powerful":
+                        case "But Now You Too Must Face the Drift":
+                        case "No Matter, No Reason, No Purpose":
+                        case "We Know Things That You Cannot":
+                        case "So We Offer You Exile":
                             accept = true;
+                            break;
+                        
+                        // new universe
+                        case "Accept":
+                            accept = reason === "within" || reason === "nextDoor";
+                            break;
+                        
+                        case "The Universe Next Door":
+                            accept = reason === "nextDoor";
+                            break;
+                        
+                        case "The Universe Within":
+                            accept = reason === "within";
+                            break;
+                        
+                        // dismantle everything
+                        case "Reject":
+                        case "Disassemble the Probes":
+                        case "Disassemble the Swarm":
+                        case "Disassemble the Factories":
+                        case "Disassemble the Strategy Engine":
+                        case "Disassemble Quantum Computing":
+                        case "Disassemble Processors":
+                        case "Disassemble Memory":
+                            accept = reason === "single";
                             break;
 
                         case "Memory release":
@@ -302,7 +345,7 @@
                 ++wireDroneProduction;
             } else if (availableMatter && harvesterDroneProduction === 0) {
                 ++harvesterDroneProduction;
-            } else if (btn.btnRaiseProbeCombat?.isVisible && drifterCount > probeCount / 100 && combat < Math.max(9, selfReplication * 3 / 4)) {
+            } else if (btn.btnRaiseProbeCombat?.isVisible && drifterCount > probeCount / 1000 && combat < Math.max(9, selfReplication * 3 / 4)) {
                 ++combat;
             } else if (unusedClips > probeCost) {
                 ++selfReplication;
@@ -480,6 +523,14 @@
                         btn.btnMakeFarm.click();
                     }
                 }
+            } else if (factoryLevel === 0 && factoryCost > unusedClips) {
+                // Messed up, try again
+                console.log("Can't make first factory. Retrying...");
+                btn.btnFactoryReboot?.click();
+                btn.btnWireDroneReboot?.click();
+                btn.btnHarvesterReboot?.click();
+                btn.btnBatteryReboot?.click();
+                btn.btnFarmReboot?.click();
             } else {
                 var dDemand = (harvesterLevel * dronePowerRate/100) + (wireDroneLevel * dronePowerRate/100);
                 var fDemand = (factoryLevel * factoryPowerRate/100);
@@ -515,6 +566,7 @@
                     wireRate = a * 100;
                 }
 
+                sliderElement.value = 100; // todo: better
                 if (supply <= demand) {
                     if (btn.btnFarmx100?.available) {
                         console.log("Making 100 farms");
@@ -526,14 +578,15 @@
                         console.log("Making 1 farm");
                         btn.btnMakeFarm.click();
                     }
-                } else if (capacity <= demand * 60) {
-                    if (btn.btnBatteryx100?.available) {
+                } else if (capacity <= demand && capacity < 100000) {
+                    /*if (btn.btnBatteryx100?.available) {
                         console.log("Making 100 batteries");
                         btn.btnBatteryx100.click();
                     } else if (btn.btnBatteryx10?.available) {
                         console.log("Making 10 batteries");
                         btn.btnBatteryx10.click();
-                    } else if (btn.btnMakeBattery?.available) {
+                    } else */
+                    if (btn.btnMakeBattery?.available) {
                         console.log("Making 1 battery");
                         btn.btnMakeBattery.click();
                     }
@@ -542,7 +595,7 @@
                         console.log("Making 1 factory");
                         btn.btnMakeFactory.click();
                     } else if (sliderElement.value < 200) {
-                        sliderElement.value += 1
+                        // sliderElement.value = 200;
                     }
                 } else if (wireRate <= matterRate && acquiredMatter > 0) {
                     if (btn.btnWireDronex1000?.available) {
@@ -558,7 +611,7 @@
                         console.log("Making 1 wire drone");
                         btn.btnMakeWireDrone.click();
                     } else if (sliderElement.value > 0) {
-                        sliderElement.value -= 1
+                        // sliderElement.value = 0;
                     }
                 } else {
                     if (btn.btnHarvesterx1000?.available) {
@@ -574,7 +627,7 @@
                         console.log("Making 1 harvester drone");
                         btn.btnMakeHarvester.click();
                     } else if (sliderElement.value > 0) {
-                        sliderElement.value -= 1
+                        // sliderElement.value = 0;
                     }
                 }
             }
