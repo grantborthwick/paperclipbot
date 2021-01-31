@@ -30,35 +30,9 @@
     }
     loadButtons();
 
-    // Keep the price from changing more than once per second - this stabilizes the metrics somewhat
-    window.priceCanChange = true;
-    function holdPrice() {
-        window.priceCanChange = false;
-        var delay = -4.5 * margin + 1.225
-        delay = 1000;
-        setTimeout(() => window.priceCanChange = true, delay);
-    }
-
-    //* Single play-through - deconstruct the universe
-    var purpose = "single";
-
-    // Multiple play-throughs - parallel/inner universes
-    // var purpose = "within";
-    // var purpose = "nextDoor";
-    if (prestigeU) {
-        purpose = "nextDoor";
-    } else if (prestigeS) {
-        purpose = "within";
-    }
-
-    var extraOps, focus, phase;
+    let phase;
     function initialize() {
         loadButtons();
-        
-        extraOps = operations > 1000 * memory;
-
-        // todo: calculate rev or paperclip increase for each and figure out which helps more
-        focus = margin > .05 ? "output" : "marketing";
         
         phase = trust === 0
             ? btn.btnMakeProbe?.isVisible
@@ -108,11 +82,12 @@
                     if (btn.btnEntertainSwarm?.isVisible || btn.btnSynchSwarm?.isVisible) {
                         accept = false;
                     } else {
-                        accept = true;
+                        // accept = true;
+                        accept = false;
                     }
                 } else {
                     switch (project.title.trim()) {
-                        case "Quantum Temporal Reversion": // We messed up
+                        /*case "Quantum Temporal Reversion": // We messed up
                             // reset();
                             // return
                         case "Beg for More Wire": 
@@ -263,17 +238,20 @@
                         
                         // new universe
                         case "Accept":
-                            accept = purpose === "within" || purpose === "nextDoor";
+                            // accept = purpose === "within" || purpose === "nextDoor";
+                            accept = true;
                             break;
                         
                         case "The Universe Next Door":
-                            accept = purpose === "nextDoor";
+                            // accept = purpose === "nextDoor";
+                            accept = true;
                             window.endTime = new Date();
                             alert(`Done after ${(window.endTime - window.start)/1000} seconds | Phase3: ${(window.endTime - window.phase3Start) / 1000} seconds | Phase2: ${(window.phase3Start - window.phase2Start) / 1000} seconds | Phase1: ${(window.phase2Start - window.start) / 1000} seconds`);
                             break;
                         
                         case "The Universe Within":
-                            accept = purpose === "within";
+                            // accept = purpose === "within";
+                            accept = false;
                             window.endTime = new Date();
                             alert(`Done after ${(window.endTime - window.start)/1000} seconds | Phase3: ${(window.endTime - window.phase3Start) / 1000} seconds | Phase2: ${(window.phase3Start - window.phase2Start) / 1000} seconds | Phase1: ${(window.phase2Start - window.start) / 1000} seconds`);
                             break;
@@ -300,7 +278,7 @@
                             break;
 
                         default:
-                            console.log(`Unknown project ${project.title}`)
+                            console.log(`Unknown project ${project.title}`)*/
                     }
                 }
                 if (accept) {
@@ -311,7 +289,7 @@
             }
         }
     });
-    
+
     var quantumClickLoopName = "quantumClick";
     scheduleLoop("quantumCheck", 1000, () => {
         if (window.intervalIds[quantumClickLoopName] || nextQchip < 1) {
@@ -335,85 +313,6 @@
         }
     });
     
-    var probeDesignRunning = false;
-    scheduleLoop("probeDesign", 1000, async () => {
-        if (probeDesignRunning) {
-            return;
-        }
-        
-        probeDesignRunning = true;
-        
-        var speed = 0;
-        var exploration = 0;
-        var selfReplication = 0;
-        var hazardRemediation = 0;
-        var factoryProduction = 0;
-        var harvesterDroneProduction = 0;
-        var wireDroneProduction = 0;
-        var combat = 0;
-        for (var i = 0; i < probeTrust; ++i) {
-            if (hazardRemediation < 5) {
-                ++hazardRemediation;
-            } else if (selfReplication < 7 && unusedClips > probeCost) {
-                ++selfReplication;
-            } else if (clipRate === 0 && availableMatter <= probeCost) {
-                if (speed <= exploration) {
-                    ++speed;
-                } else {
-                    ++exploration;
-                }
-            } else if (wire && factoryProduction === 0) {
-                ++factoryProduction;
-            } else if (acquiredMatter && wireDroneProduction === 0) {
-                ++wireDroneProduction;
-            } else if (availableMatter && harvesterDroneProduction === 0) {
-                ++harvesterDroneProduction;
-            } else if (btn.btnRaiseProbeCombat?.isVisible && drifterCount > probeCount / 1000 && combat < Math.max(9, selfReplication * 3 / 4)) {
-                ++combat;
-            } else if (unusedClips > probeCost) {
-                ++selfReplication;
-            } else {
-                ++combat;
-            }
-        }
-
-        /* console.log(
-            `speed: ${speed} | ` +
-            `exploration: ${exploration} | ` +
-            `selfReplication: ${selfReplication} | ` +
-            `hazardRemediation: ${hazardRemediation} | ` +
-            `factoryProduction: ${factoryProduction} | ` +
-            `factoryProduction: ${factoryProduction} | ` +
-            `harvesterDroneProduction: ${harvesterDroneProduction} | ` +
-            `wireDroneProduction: ${wireDroneProduction} | ` +
-            `combat: ${combat}`); */
-
-        var data = [
-            [speed,                    () => probeSpeed,  btn.btnRaiseProbeSpeed,  btn.btnLowerProbeSpeed],
-            [exploration,              () => probeNav,    btn.btnRaiseProbeNav,    btn.btnLowerProbeNav],
-            [selfReplication,          () => probeRep,    btn.btnRaiseProbeRep,    btn.btnLowerProbeRep],
-            [hazardRemediation,        () => probeHaz,    btn.btnRaiseProbeHaz,    btn.btnLowerProbeHaz],
-            [factoryProduction,        () => probeFac,    btn.btnRaiseProbeFac,    btn.btnLowerProbeFac],
-            [harvesterDroneProduction, () => probeHarv,   btn.btnRaiseProbeHarv,   btn.btnLowerProbeHarv],
-            [wireDroneProduction,      () => probeWire,   btn.btnRaiseProbeWire,   btn.btnLowerProbeWire],
-            [combat,                   () => probeCombat, btn.btnRaiseProbeCombat, btn.btnLowerProbeCombat]
-        ];
-        var toLower = data.filter(x => x[0] < x[1]());
-        var toRaise = data.filter(x => x[0] > x[1]());
-        for ([desired, current, raise, lower] of toLower) {
-            while (current() > desired && lower?.available) {
-                lower.click();
-            }
-        }
-        await delay(250);
-        for ([desired, current, raise, lower] of toRaise) {
-            while (current() < desired && raise?.available) {
-                raise.click();
-            }
-        }
-        probeDesignRunning = false;
-    });
-
     scheduleLoop("botLoop", 10, () => {
         if (btn.btnAddProc?.available) {
             if (processors < 6) {
@@ -425,7 +324,19 @@
             } else if (processors < 30) {
                 console.log("Increasing processors");
                 btn.btnAddProc?.click();
-            } else if (memory < 200) {
+            } else if (memory < 150) { // Combat
+                console.log("Increasing memory");
+                btn.btnAddMem?.click();
+            } else if (project121.flag === 0) { // gain honor for winning - this might be the wrong one
+                console.log("Increasing processors");
+                btn.btnAddProc?.click();
+            } else if (memory < 175) { // Use speed for combat
+                console.log("Increasing memory");
+                btn.btnAddMem?.click();
+            } else if (project121.flag === 0) { // gain honor for winning - this might be the wrong one
+                console.log("Increasing processors");
+                btn.btnAddProc?.click();
+            } else if (memory < 200) { // More honor for successive wins
                 console.log("Increasing memory");
                 btn.btnAddMem?.click();
             } else {
@@ -463,213 +374,93 @@
                     console.log("Buying wire");
                     btn.btnBuyWire.click();
                     return
-                } else if (margin > .02 && window.priceCanChange) {
-                    console.log("Lowering price");
-                    btn.btnLowerPrice?.click();
-                    holdPrice();
-                    return;
                 }
-            }
-
-            if (window.priceCanChange) {
-                if (clipRate === 0 || (clipRate > avgSales && margin > .02 && unsoldClips > clipRate * 30)) {
-                    console.log("Lowering price");
-                    btn.btnLowerPrice?.click();
-                    holdPrice();
-                    return;
-                } else if (clipRate !== 0 && clipRate < avgSales || margin < .02 || unsoldClips < clipRate * 30) {
-                    console.log("Raising price");
-                    btn.btnRaisePrice?.click();
-                    holdPrice();
-                    return;
-                }
-            }
-
-            // If we're selling really well, increase production
-            if (focus === "output") {
-                if (btn.btnMakeMegaClipper?.available && wire > clipRate * 5) {
-                    btn.btnMakeMegaClipper.click();
-                    console.log("Making a MegaClipper")
-                    return;
-                } else if (!megaClipperFlag && btn.btnMakeClipper?.available && wire > clipRate * 5) {
-                    btn.btnMakeClipper.click();
-                    console.log("Making an AutoClipper")
-                    return;
-                }
-            } else { // otherwise, focus on marketing
-                if (btn.btnExpandMarketing?.available) {
-                    btn.btnExpandMarketing.click();
-                    console.log("Increasing marketing")
-                    return;
-                }
-            }
-
-            if (btn.btnImproveInvestments?.available && yomi > investUpgradeCost + 15000) {
-                btn.btnImproveInvestments.click();
-                console.log("Improving investments");
-            }
-
-            if (investStratElement.selectedIndex === 0) {
-                investStratElement.selectedIndex = 2;
-            }
-
-            if (btn.btnInvest?.available && investLevel >= 5 && portTotal < clips / 10 && funds > 10000) {
-                console.log("Investing");
-                btn.btnInvest.click();
-            }
-
-            if (btn.btnWithdraw?.available && portTotal > clips * 4 && bankroll > 0 && bankroll < clips) {
-                console.log("Divesting");
-                btn.btnWithdraw.click();
             }
         }
 
         // Phase 1
         if (phase === 1) {
-            var capacity = batteryLevel * batterySize / 100;
-            var supply = farmLevel * farmRate / 100;
-            if (availableMatter === 0 && acquiredMatter === 0 && wire === 0) {
-                btn.btnFactoryReboot?.click();
-                btn.btnWireDroneReboot?.click();
-                btn.btnHarvesterReboot?.click();
-                if (capacity > 100000) {
-                    btn.btnBatteryReboot?.click();
-                } else if (capacity < 100000) {
-                    btn.btnMakeBattery.click();
-                } else if (capacity === 100000) {
-                    if (storedPower / 100 === capacity) {
-                        btn.btnFarmReboot?.click();
-                    } else {
-                        btn.btnMakeFarm.click();
-                    }
-                }
-            } else if (factoryLevel === 0 && factoryCost > unusedClips) {
-                // Messed up, try again
-                console.log("Can't make first factory. Retrying...");
-                btn.btnFactoryReboot?.click();
-                btn.btnWireDroneReboot?.click();
-                btn.btnHarvesterReboot?.click();
-                btn.btnBatteryReboot?.click();
-                btn.btnFarmReboot?.click();
+            let demand = Number.parseInt(powerConsumptionRateElement.innerText.replace(/,/g,""));
+            let supply = Number.parseInt(powerProductionRateElement.innerText.replace(/,/g,""));
+            
+            let stored = Number.parseInt(storedPowerElement.innerText.replace(/,/g,""));
+            let capacity = Number.parseInt(maxStorageElement.innerText.replace(/,/g,""));
+
+            // Keep production above consumption
+            if (!isNaN(demand) && !isNaN(supply) && ((demand > supply) || (btn.projectButton46 && stored < capacity))) {
+                console.log("Farm");
+                [btnFarmx100, btnFarmx10, btnMakeFarm].find(x => x?.available)?.click();
+            } else if (btn.projectButton46 && capacity < 10000000) {
+                console.log(`Storage`);
+                [btnBatteryx100, btnBatteryx10, btnMakeBattery].find(x => x?.available)?.click();
             } else {
-                var dDemand = (harvesterLevel * dronePowerRate/100) + (wireDroneLevel * dronePowerRate/100);
-                var fDemand = (factoryLevel * factoryPowerRate/100);
-                var demand = dDemand + fDemand;
-                
-                // Logic copied from acquireMatter()
-                var matterRate = 0;
-                if (availableMatter > 0) {
-                    var dbsth = 1;
-                    if (droneBoost>1){
-                        dbsth = droneBoost * Math.floor(harvesterLevel);
+                function parseElementNumber(element) {
+                    let [number, unit] = element.innerText.trim().split(" ");
+                    number = Math.floor(Number.parseFloat(number));
+                    unit = placeValue.indexOf(` ${unit} `);
+                    if (unit === -1) {
+                        unit = 0;
                     }
-                    var mtr = powMod * dbsth * Math.floor(harvesterLevel) * harvesterRate;
-                    mtr = mtr * ((200 - sliderPos) / 100);
-                    if (mtr > availableMatter){
-                        mtr = availableMatter;
-                    }
-                    matterRate = mtr * 100;
+                    return [number, unit];
                 }
-
-                // Logic copied from processMatter()
-                var wireRate = 0;
-                if (acquiredMatter > 0) {
-                    var dbstw = 1;
-                    if (droneBoost > 1) {
-                        dbstw = droneBoost * Math.floor(wireDroneLevel);
+                function compareNumber([number1, unit1], [number2, unit2]) {
+                    if (unit1 > unit2) {
+                        // console.log(`${unit1}.${number1} > ${unit2}.${number2}`);
+                        return 1;
+                    } else if (unit2 > unit1) {
+                        // console.log(`${unit2}.${number2}> ${unit1}.${number1}`);
+                        return -1;
+                    } else if (number1 > number2) {
+                        // console.log(`${unit1}.${number1} > ${unit2}.${number2}`);
+                        return 1;
+                    } else if (number2 > number1) {
+                        // console.log(`${unit2}.${number2}> ${unit1}.${number1}`);
+                        return -1;
+                    } else {
+                        // console.log(`${unit1}.${number1} == ${unit2}.${number2}`);
+                        return 0;
                     }
-                    var a = powMod * dbstw * Math.floor(wireDroneLevel) * wireDroneRate;
-                    a = a * ((200 - sliderPos) / 100);
-                    if (a > acquiredMatter) {
-                        a = acquiredMatter;
-                    }
-                    wireRate = a * 100;
                 }
+    
+                let avail = parseElementNumber(availableMatterDisplayElement); // Available matter
+                let maps = parseElementNumber(mapsElement);                    // Matter / second
+                let wpps = parseElementNumber(wppsElement);                    // Wire / second
+                let clipss = parseElementNumber(clipmakerRate2Element);        // Clips / second
 
-                sliderElement.value = 100; // todo: better
-                if (supply <= demand) {
-                    if (btn.btnFarmx100?.available) {
-                        console.log("Making 100 farms");
-                        btn.btnFarmx100.click();
-                    } else if (btn.btnFarmx10?.available) {
-                        console.log("Making 10 farms");
-                        btn.btnFarmx10.click();
-                    } else if (btn.btnMakeFarm?.available) {
-                        console.log("Making 1 farm");
-                        btn.btnMakeFarm.click();
-                    }
-                } else if (capacity <= demand && capacity < 100000) {
-                    /*if (btn.btnBatteryx100?.available) {
-                        console.log("Making 100 batteries");
-                        btn.btnBatteryx100.click();
-                    } else if (btn.btnBatteryx10?.available) {
-                        console.log("Making 10 batteries");
-                        btn.btnBatteryx10.click();
-                    } else */
-                    if (btn.btnMakeBattery?.available) {
-                        console.log("Making 1 battery");
-                        btn.btnMakeBattery.click();
-                    }
-                } else if (availableMatter === 0 || (clipRate <= wireRate && wire > 0)) {
-                    if (btn.btnMakeFactory?.available) {
-                        console.log("Making 1 factory");
-                        btn.btnMakeFactory.click();
-                    } else if (sliderElement.value < 200) {
-                        // sliderElement.value = 200;
-                    }
-                } else if (wireRate <= matterRate && acquiredMatter > 0) {
-                    if (btn.btnWireDronex1000?.available) {
-                        console.log("Making 1000 wire drones");
-                        btn.btnWireDronex1000.click();
-                    } else if (btn.btnWireDronex100?.available) {
-                        console.log("Making 100 wire drones");
-                        btn.btnWireDronex100.click();
-                    } else if (btn.btnWireDronex10?.available) {
-                        console.log("Making 10 wire drones");
-                        btn.btnWireDronex10.click();
-                    } else if (btn.btnMakeWireDrone?.available) {
-                        console.log("Making 1 wire drone");
-                        btn.btnMakeWireDrone.click();
-                    } else if (sliderElement.value > 0) {
-                        // sliderElement.value = 0;
+                if (btn.projectButton102) {
+                    console.log("projectButton102");
+                    if (btn.projectButton102.available) {
+                        btn.projectButton102.click();
                     }
                 } else {
-                    if (btn.btnHarvesterx1000?.available) {
-                        console.log("Making 1000 harvester drones");
-                        btn.btnHarvesterx1000.click();
-                    } else if (btn.btnHarvesterx100?.available) {
-                        console.log("Making 100 harvester drones");
-                        btn.btnHarvesterx100.click();
-                    } else if (btn.btnHarvesterx10?.available) {
-                        console.log("Making 10 harvester drones");
-                        btn.btnHarvesterx10.click();
-                    } else if (btn.btnMakeHarvester?.available) {
-                        console.log("Making 1 harvester drone");
-                        btn.btnMakeHarvester.click();
-                    } else if (sliderElement.value > 0) {
-                        // sliderElement.value = 0;
+                    if (avail[0] !== 0 && compareNumber(clipss, wpps) >= 0) {
+                        if (compareNumber(clipss, maps) >= 0) {
+                            console.log("Harvester");
+                            [btnHarvesterx1000, btnHarvesterx100, btnHarvesterx10, btnMakeHarvester].find(x => x?.available)?.click();
+                        } else {
+                            console.log("Wire");
+                            [btnWireDronex1000, btnWireDronex100, btnWireDronex10, btnMakeWireDrone].find(x => x?.available)?.click();
+                        }
+                    } else {
+                        console.log("Factory");
+                        if (btn.btnMakeFactory?.available) {
+                            btn.btnMakeFactory?.click();
+                        }
                     }
                 }
             }
+            
         }
 
         // Phase 2
         if (phase === 2) {
-            // todo: make this better
-            if (availableMatter === 0 && acquiredMatter === 0) {
-                sliderElement.value = 200;
-            } else {
-                sliderElement.value = 0;
-            }
-
-            if (btn.btnIncreaseProbeTrust?.available) {
-                console.log("Increasing probe trust");
-                btn.btnIncreaseProbeTrust.click();
-            }
-            if (btn.btnIncreaseMaxTrust?.available) {
-                console.log("Increasing max trust");
-                btn.btnIncreaseMaxTrust.click();
-            }
         }
     });
+
+    /* scheduleLoop("money", 1000, () => {
+        btn.btnInvest?.click();
+        btn.btnImproveInvestments?.click();
+        btn.projectButton119?.click(); // Theory of mind
+        btn.projectButton51?.click(); // Photonic chip
+    }); */
 })();
