@@ -425,15 +425,12 @@
             } else if (processors < 30) {
                 console.log("Increasing processors");
                 btn.btnAddProc?.click();
-            } else if (memory < 120) {
+            } else if (memory < 200) {
                 console.log("Increasing memory");
                 btn.btnAddMem?.click();
-            } else if (processors <= memory * 2) {
+            } else {
                 console.log("Increasing processors");
                 btn.btnAddProc?.click();
-            } else {
-                console.log("Increasing memory");
-                btn.btnAddMem?.click();
             }
         }
 
