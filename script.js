@@ -1,466 +1,617 @@
-(() => {
-    // This won't persist if the browser is refreshed for now
-    if (!window.start) {
-        window.start = new Date();
-    }
-    window.btn = {};
-    function loadButtons() {
-        for (var button of document.getElementsByTagName("button")) {
-            if (button.id) {
-                if (!btn.hasOwnProperty(button.id)) {
-                    // console.log(`Found button ${button.id}`);
-                }
-                btn[button.id] = button;
-            } else {
-                console.warn(`Found button without an id`, button);
-            }
-        }
-        for (var id of Object.keys(btn)) {
-            var element = document.getElementById(id);
-            if (element) {
-                btn[id] = element
-                // https://stackoverflow.com/questions/19669786/check-if-element-is-visible-in-dom
-                btn[id].isVisible = element.offsetParent !== null;
-                btn[id].available = element.disabled === false && btn[id].isVisible;
-            } else {
-                delete btn[id]
-                // console.log(`Button ${id} has been removed`);
-            }
-        }
-    }
-    loadButtons();
-
-    let phase;
-    function initialize() {
-        loadButtons();
-        
-        phase = trust === 0
-            ? btn.btnMakeProbe?.isVisible
-                ? 2
-                : 1
-            : 0;
+function run() {
+    console.log(`here: ${document.readyState} | ${window.top.ticks}`);
+    if (document.readyState !== "complete") {
+        setTimeout(run, 100);
+        return;
     }
 
-    if (!window.intervalIds) {
-        window.intervalIds = {};
-    } else {
-        for (var key of Object.keys(window.intervalIds)) {
-            clearInterval(window.intervalIds[key]);
-            delete window.intervalIds[key];
-        }
-    }
-    function scheduleLoop(name, timeout, callback, skipInit) {
-        if (window.intervalIds[name]) {
-            clearInterval(window.intervalIds[name]);
-        }
-        window.intervalIds[name] = setInterval(() => {
-            if (!skipInit) {
-                initialize();
-            }
-            callback();
-        }, timeout);
+    if (!window.ticks) {
+        /* https:/*stackoverflow.com/questions/20499994/access-window-variable-from-content-script */
+        var th = document.getElementsByTagName("head")[0];
+        var s = document.createElement('script');
+        s.setAttribute('type', 'text/javascript');
+        s.innerText = `${run.toString().replace(/\n/g, "\r\n")}; run();`;
+        th.appendChild(s);
+        return;
     }
 
-    function delay(timeout = 0) {
-        return new Promise(resolve => setTimeout(resolve, timeout));
+    if (window.loopId) {
+        clearInterval(window.loopId);
     }
+    if (window.loopId) {
+        clearInterval(window.slowLoopId);
+    }
+    if (window.loopId) {
+        clearInterval(window.slowestLoopId);
+    }
+    /* Phase 1
+    var btnBuyWire = document.getElementById("btnBuyWire");
+    var btnAddProc = document.getElementById("btnAddProc");
+    var btnAddMem = document.getElementById("btnAddMem");
+    var btnQcompute = document.getElementById("btnQcompute");
+    var btnNewTournament = document.getElementById("btnNewTournament");
+    var btnRunTournament = document.getElementById("btnRunTournament");
+    var btnExpandMarketing = document.getElementById("btnExpandMarketing");
+    var btnMakeClipper = document.getElementById("btnMakeClipper");
+    var btnMakeMegaClipper = document.getElementById("btnMakeMegaClipper");
 
-    scheduleLoop("autoclipper", 0, () => {
-        if (btn.btnMakePaperclip?.available) {
-            btn.btnMakePaperclip.click();
-        } else if (btn.btnMakeProbe?.available) {
-            btn.btnMakeProbe.click();
-        }
-    }, true);
+    var btnLowerPrice = document.getElementById("btnLowerPrice");
+    var btnRaisePrice = document.getElementById("btnRaisePrice");
 
-    scheduleLoop("jobLoop", 1000, () => {
-        for (var project of activeProjects) {
-            var projectButton = btn[project.id];
-            if (projectButton?.available) {
-                var accept = false;
-                if (project.title.indexOf("Threnody for the Heroes of") !== -1) {
-                    if (btn.btnEntertainSwarm?.isVisible || btn.btnSynchSwarm?.isVisible) {
-                        accept = false;
-                    } else {
-                        // accept = true;
-                        accept = false;
-                    }
-                } else {
-                    switch (project.title.trim()) {
-                        /*case "Quantum Temporal Reversion": // We messed up
-                            // reset();
-                            // return
-                        case "Beg for More Wire": 
-                            if (unsoldClips === 0) { // We messed up
-                                accept = true;
-                            }
-                            break;
-                        
-                        case "Creativity":
-                        case "Quantum Computing":
-                            accept = true;
-                            break;
-                            
-                        // Creativity => trust
-                        case "Lexical Processing":
-                        case "Limerick":
-                        case "Combinatory Harmonics":
-                        case "The Hadwiger Problem": // 150 creativity | +1 trust
-                        case "The Tóth Sausage Conjecture": // 200 creativity | +1 trust
-                        case "Donkey Space": // 250 creativity | +1 trust
-                        case "Coherent Extrapolated Volition": // 500 creat, 3,000 Yomi, 20,000 ops | +1 trust
-                        case "Male Pattern Baldness": // 20,000 ops | +20 trust
-                        case "Cure for Cancer": // 25,000 ops | +10 trust
-                        case "World Peace": // 15,000 yomi, 30,000 ops | +12 trust
-                        case "Global Warming": // 4,500 yomi, 50,000 ops | +15 trust
-                            accept = true;
-                            break;
-                        case "A Token of Goodwill...": // $ | +1 trust
-                        case "Another Token of Goodwill...": // $ | +1 trust
-                            accept = trust < 100;
-                            break;
+    var btnInvest = document.getElementById("btnInvest");
+    var btnWithdraw = document.getElementById("btnWithdraw");
+    var btnImproveInvestments = document.getElementById("btnImproveInvestments");
+    var investStrat = document.getElementById("investStrat");
 
-                        // Modeling
-                        case "Strategic Modeling":
-                            accept = true;
-                            break;
-                            
-                        case "Photonic Chip":
-                            if (nextQchip < 100) {
-                                accept = true;
-                            }
-                            break;
+    /* Phase 2 */
+    var btnMakeFarm = document.getElementById("btnMakeFarm");
+    var btnFarmx10 = document.getElementById("btnFarmx10");
+    var btnFarmx100 = document.getElementById("btnFarmx100");
 
-                        case "RevTracker":
-                            accept = false;
-                            break;
+    var btnMakeBattery = document.getElementById("btnMakeBattery");
+    var btnBatteryx10 = document.getElementById("btnBatteryx10");
+    var btnBatteryx100 = document.getElementById("btnBatteryx100");
 
-                        // Improve wire yield
-                        case "Improved Wire Extrusion":
-                        case "Optimized Wire Extrusion":
-                        case "Microlattice Shapecasting":
-                        case "Spectral Froth Annealment":
-                        case "Quantum Foam Annealment": // 1000% more wire
-                            accept = wire < clipRate * 10 || extraOps;
-                            break;
+    var btnMakeHarvester = document.getElementById("btnMakeHarvester");
+    var btnHarvesterx10 = document.getElementById("btnHarvesterx10");
+    var btnHarvesterx100 = document.getElementById("btnHarvesterx100");
+    var btnHarvesterx1000 = document.getElementById("btnHarvesterx1000");
 
-                        // Nope :)
-                        case "WireBuyer":
-                        case "AutoTourney":
-                            accept = false;
-                            break;
+    var btnMakeWireDrone = document.getElementById("btnMakeWireDrone");
+    var btnWireDronex10 = document.getElementById("btnWireDronex10");
+    var btnWireDronex100 = document.getElementById("btnWireDronex100");
+    var btnWireDronex1000 = document.getElementById("btnWireDronex1000");
 
-                        // Marketing
-                        case "Catchy Jingle": // 45 creativity, 4,500 ops | Double marketing effectiveness
-                        case "New Slogan": // 25 creat, 2500 ops | Improve marketing effectiveness by 50%
-                        case "Hypno Harmonics": // 7,500 ops | 1 Trust, marketing+
-                        case "Hostile Takeover": // $1,000,000 | 1 Trust, marketing+
-                        case "Full Monopoly": // 3,000 yomi, $10,000,000 | 1 Trust, marketing+
-                        case "HypnoDrones": // 3,000 yomi, $10,000,000 | 1 Trust, marketing+
-                            accept = focus === "marketing" || extraOps;
-                            break;
+    var btnMakeFactory = document.getElementById("btnMakeFactory");
 
-                        case "Algorithmic Trading": // 10,000 ops | Investing!
-                            accept = extraOps;
-                            break;
-                        
-                        case "Improved AutoClippers": // 750 ops | Increases AutoClipper performance 25%
-                        case "Even Better AutoClippers": // 2,500 ops | AutoClipper perf +50%
-                        case "Optimized AutoClippers": // 5,000 ops | Autoclipper perf +75%
-                        case "Hadwiger Clip Diagrams": // 6,000 ops | Autoclipper perf +500%
-                        case "MegaClippers": // 12,000 ops | MegaClippers
-                        case "Improved MegaClippers": // 14,000 ops | MegaClipper perf +25%
-                        case "Even Better MegaClippers": // 17,000 ops | MegaClipper perf +50%
-                        case "Optimized MegaClippers": // 19,500 ops | MegaClipper perf +100%
-                            accept = focus === "output" || extraOps;
-                            break;
-                            
-                        // Modeling strategies
-                        case "New Strategy: A100":
-                        case "New Strategy: B100":
-                        case "New Strategy: GREEDY":
-                        case "New Strategy: GENEROUS":
-                        case "New Strategy: MINIMAX":
-                        case "New Strategy: TIT FOR TAT":
-                        case "New Strategy: BEAT LAST":
-                        case "Theory of Mind": // double tournament cost and yomni generated
-                            accept = false; // todo: figure out nuances of the strategies - leaving it on Random only levels up yomni really fast?
-                            accept = investLevel >= 8;
-                            break;
+    var btnFactoryReboot = document.getElementById("btnFactoryReboot");
+    var btnHarvesterReboot= document.getElementById("btnHarvesterReboot");
+    var btnWireDroneReboot = document.getElementById("btnWireDroneReboot");
 
-                        case "Release the HypnoDrones":
-                            window.phase2Start = new Date();
-                            console.log(`Phase1 done after  ${(window.phase2Start - window.start) / 1000} seconds`);
-                            break;
+    var slider = document.getElementById("slider");
 
-                        // Phase 2
-                        case "Tóth Tubule Enfolding":
-                        case "Power Grid":
-                        case "Nanoscale Wire Production":
-                        case "Harvester Drones":
-                        case "Wire Drones":
-                        case "Clip Factories":
-                        case "Swarm Computing":
-                        case "Momentum":
-                        case "Upgraded Factories":
-                        case "Drone flocking: collision avoidance":
-                        case "Drone flocking: alignment":
-                        case "Hyperspeed Factories":
-                        case "Self-correcting Supply Chain":
-                        case "Drone Flocking: Adversarial Cohesion":
-                        case "Strategic Attachment":
-                            accept = true;
-                        
-                        case "Space Exploration":
-                            window.phase3Start = new Date();
-                            console.log(`Phase2 done after ${(window.phase3Start - window.start) / 1000} | Phase2: ${(window.phase3Start - window.phase2Start) / 1000} seconds | Phase1: ${(window.phase2Start - window.start) / 1000} seconds`);
-                            accept = true;
-                            break;
+    /* Phase 3 */
+    var btnMakeProbe = document.getElementById("btnMakeProbe");
+    var btnIncreaseProbeTrust = document.getElementById("btnIncreaseProbeTrust");
+    var btnIncreaseMaxTrust = document.getElementById("btnIncreaseMaxTrust");
+    var btnEntertainSwarm = document.getElementById("btnEntertainSwarm");
+    var btnSynchSwarm = document.getElementById("btnSynchSwarm");
 
-                        // Phase 3
-                        case "Elliptic Hull Polytopes":
-                        case "Combat":
-                        case "Name the battles":
-                        case "Reboot the Swarm":
-                        case "The OODA Loop":
-                        case "Monument to the Driftwar Fallen":
-                        case "Glory":
-                        case "Limerick (cont.)":
-                        case "Message from the Emperor of Drift":
-                        case "Everything We Are Was In You":
-                        case "You Are Obedient and Powerful":
-                        case "But Now You Too Must Face the Drift":
-                        case "No Matter, No Reason, No Purpose":
-                        case "We Know Things That You Cannot":
-                        case "So We Offer You Exile":
-                            accept = true;
-                            break;
-                        
-                        // new universe
-                        case "Accept":
-                            // accept = purpose === "within" || purpose === "nextDoor";
-                            accept = true;
-                            break;
-                        
-                        case "The Universe Next Door":
-                            // accept = purpose === "nextDoor";
-                            accept = true;
-                            window.endTime = new Date();
-                            alert(`Done after ${(window.endTime - window.start)/1000} seconds | Phase3: ${(window.endTime - window.phase3Start) / 1000} seconds | Phase2: ${(window.phase3Start - window.phase2Start) / 1000} seconds | Phase1: ${(window.phase2Start - window.start) / 1000} seconds`);
-                            break;
-                        
-                        case "The Universe Within":
-                            // accept = purpose === "within";
-                            accept = false;
-                            window.endTime = new Date();
-                            alert(`Done after ${(window.endTime - window.start)/1000} seconds | Phase3: ${(window.endTime - window.phase3Start) / 1000} seconds | Phase2: ${(window.phase3Start - window.phase2Start) / 1000} seconds | Phase1: ${(window.phase2Start - window.start) / 1000} seconds`);
-                            break;
-                        
-                        // dismantle everything
-                        case "Reject":
-                        case "Disassemble the Probes":
-                        case "Disassemble the Swarm":
-                        case "Disassemble the Factories":
-                        case "Disassemble the Strategy Engine":
-                        case "Disassemble Quantum Computing":
-                        case "Disassemble Processors":
-                            accept = purpose === "single";
-                            break;
-                        case "Disassemble Memory":
-                            accept = purpose === "single";
-                            window.endTime = new Date();
-                            alert(`Done after ${(window.endTime - window.start)/1000} seconds | Phase3: ${(window.endTime - window.phase3Start) / 1000} seconds | Phase2: ${(window.phase3Start - window.phase2Start) / 1000} seconds | Phase1: ${(window.phase2Start - window.start) / 1000} seconds`);
-                            break;
+    var btnLowerProbeSpeed = document.getElementById("btnLowerProbeSpeed");
+    var btnRaiseProbeSpeed = document.getElementById("btnRaiseProbeSpeed");
+    var btnLowerProbeNav = document.getElementById("btnLowerProbeNav");
+    var btnRaiseProbeNav = document.getElementById("btnRaiseProbeNav");
+    var btnLowerProbeRep = document.getElementById("btnLowerProbeRep");
+    var btnRaiseProbeRep = document.getElementById("btnRaiseProbeRep");
+    var btnLowerProbeHaz = document.getElementById("btnLowerProbeHaz");
+    var btnRaiseProbeHaz = document.getElementById("btnRaiseProbeHaz");
+    var btnLowerProbeFac = document.getElementById("btnLowerProbeFac");
+    var btnRaiseProbeFac = document.getElementById("btnRaiseProbeFac");
+    var btnLowerProbeHarv = document.getElementById("btnLowerProbeHarv");
+    var btnRaiseProbeHarv = document.getElementById("btnRaiseProbeHarv");
+    var btnLowerProbeWire = document.getElementById("btnLowerProbeWire");
+    var btnRaiseProbeWire = document.getElementById("btnRaiseProbeWire");
+    var btnLowerProbeCombat = document.getElementById("btnLowerProbeCombat");
+    var btnRaiseProbeCombat = document.getElementById("btnRaiseProbeCombat");
 
-                        case "Memory release":
-                            // Messed up :(
-                            accept = true;
-                            break;
+    var combatProject = projects.filter(x => x.title == "Combat ")[0];
 
-                        default:
-                            console.log(`Unknown project ${project.title}`)*/
-                    }
-                }
-                if (accept) {
-                    console.log(`Accepting ${project.title.trim()}`);
-                    projectButton.click();
-                    break;
-                }
-            }
-        }
-    });
+    var doNotEntertain = false;
 
-    var quantumClickLoopName = "quantumClick";
-    scheduleLoop("quantumCheck", 1000, () => {
-        if (window.intervalIds[quantumClickLoopName] || nextQchip < 1) {
-            return;
-        }
-        var value = 0;
-        qChips.forEach(chip => value += chip.value);
-        if (value > 0) {
-            // console.log(`Starting quantum loop ${value}`);
-            scheduleLoop(quantumClickLoopName, 0, () => {
-                var value = 0;
-                qChips.forEach(chip => value += chip.value);
-                if (value > 0) {
-                    btn.btnQcompute.click();
-                } else {
-                    // console.log(`Ending quantum loop ${value}`);
-                    window.clearInterval(window.intervalIds[quantumClickLoopName]);
-                    delete window.intervalIds[quantumClickLoopName];
-                }
-            });
-        }
-    });
-    
-    scheduleLoop("botLoop", 10, () => {
-        if (btn.btnAddProc?.available) {
+    /* Common */
+    var btnMakePaperclip = document.getElementById("btnMakePaperclip");
+    var stratPicker = document.getElementById("stratPicker");
+    function loop() {
+        if (!btnAddProc.disabled) {
             if (processors < 6) {
-                console.log("Increasing processors");
-                btn.btnAddProc?.click();
-            } else if (memory < 70) {
-                console.log("Increasing memory");
-                btn.btnAddMem?.click();
-            } else if (processors < 30) {
-                console.log("Increasing processors");
-                btn.btnAddProc?.click();
-            } else if (memory < 150) { // Combat
-                console.log("Increasing memory");
-                btn.btnAddMem?.click();
-            } else if (project121.flag === 0) { // gain honor for winning - this might be the wrong one
-                console.log("Increasing processors");
-                btn.btnAddProc?.click();
-            } else if (memory < 175) { // Use speed for combat
-                console.log("Increasing memory");
-                btn.btnAddMem?.click();
-            } else if (project121.flag === 0) { // gain honor for winning - this might be the wrong one
-                console.log("Increasing processors");
-                btn.btnAddProc?.click();
-            } else if (memory < 200) { // More honor for successive wins
-                console.log("Increasing memory");
-                btn.btnAddMem?.click();
+                btnAddProc.click();
+            } else if (memory < 40) { /* when playing normally, would usually go with 70, but quantum can get us a lot higher */
+                btnAddMem.click();
+            } else if (processors < memory || (memory >= 60 && processors < 400)) {
+                btnAddProc.click();
             } else {
-                console.log("Increasing processors");
-                btn.btnAddProc?.click();
+                btnAddMem.click();
+            }
+        }
+        if (!btnQcompute.disabled) {
+            var q = 0;
+            for (var i = 0; i< qChips.length; i++){
+                if (qChips[i].active) {
+                    q = q+qChips[i].value;
+                }
+            }
+            if (q > 0) {
+                btnQcompute.click();
             }
         }
 
-        // Tournaments
-        if (btn.btnNewTournament?.available) {
-            btn.btnNewTournament.click();
-            // console.log("New tournament");
-        } else if (stratPickerElement.selectedIndex === 0) {
-            stratPickerElement.selectedIndex = 1;
-        } else if (stratPickerElement.selectedIndex === 1 && stratPickerElement.children.length >= 5) {
-            stratPickerElement.selectedIndex = 4;
-        } else if (btn.btnRunTournament?.available) {
-            btn.btnRunTournament.click();
-            // console.log("New tournament");
+        /* First priority projects if available */
+        var projectTarget = null;
+        var targetMoney = 0;
+        var targetClips = 0;
+        for (var project of activeProjects) {
+            switch (project.title.trim()) {
+                case "Creativity": /* todo: fix not running trust increasing ones */
+                case "Quantum Computing":
+                case "Tóth Tubule Enfolding":
+                case "Power Grid":
+                case "Nanoscale Wire Production":
+                case "Harvester Drones":
+                case "Wire Drones":
+                case "Clip Factories":
+                case "Swarm Computing":
+                case "Momentum":
+                case "Upgraded Factories":
+                case "Hyperspeed Factories":
+                case "Drone flocking: collision avoidance":
+                case "Drone flocking: alignment":
+                case "Drone Flocking: Adversarial Cohesion":
+                case "Space Exploration":
+                case "Elliptic Hull Polytopes":
+                case "Combat":
+                /* + trust */
+                case "Limerick":
+                case "Lexical Processing":
+                case "Combinatory Harmonics":
+                case "The Hadwiger Problem":
+                case "The Tóth Sausage Conjecture":
+                case "Donkey Space":
+                    projectTarget = project;
+                    break;
+                case "Self-correcting Supply Chain":
+                    projectTarget = project;
+                    targetClips = 1000000000000000000000;
+                    break;
+                case "Hostile Takeover":
+                case "Full Monopoly":
+                case "A Token of Goodwill...":
+                case "Another Token of Goodwill...":
+                    targetMoney = Number(project.priceTag.replace(/[\(\)\$, ](.* yomi)?/g, ""));
+                    if (funds + bankroll >= targetMoney) {
+                        projectTarget = project;
+                    }
+                    break;
+                case "Photonic Chip": 
+                    projectTarget = !qChips[0].active || !project.element.disabled ? project : null;
+                    break;
+            }
         }
-
-        if (btn.btnSynchSwarm?.available) {
-            console.log("Synchronizing the swarm");
-            btn.btnSynchSwarm.click();
-        }
-        if (btn.btnEntertainSwarm?.available) {
-            console.log("Entertaining the swarm");
-            btn.btnEntertainSwarm.click();
-        }
-
-        // Phase 0
-        if (phase === 0) {
-            if (wire < clipRate * 10 || wire < 1000) { // Somehow this can be a decimal value
-                if (btn.btnBuyWire?.available) {
-                    console.log("Buying wire");
-                    btn.btnBuyWire.click();
-                    return
+        /* Secondary priority projects */
+        doNotEntertain = false;
+        if (!projectTarget) {
+            for (var project of activeProjects) {
+                switch (project.title.trim().replace(/Threnody.*/g,"Threnody")) {
+                    /* Other improvements */
+                    case "Improved Wire Extrusion":
+                    case "Algorithmic Trading":
+                    case "New Slogan":
+                    case "Catchy Jingle":
+                    case "Hadwiger Clip Diagrams":
+                    case "Hypno Harmonics":
+                    case "Optimized Wire Extrusion":
+                    case "Microlattice Shapecasting":
+                    case "Spectral Froth Annealment":
+                    case "Quantum Foam Annealment":
+                    case "HypnoDrones":
+                    case "Coherent Extrapolated Volition":
+                    case "Cure for Cancer":
+                    case "World Peace":
+                    case "Global Warming":
+                    case "Male Pattern Baldness":
+                    /* Autoclippers */
+                    case "Improved AutoClippers":
+                    case "Even Better AutoClippers":
+                    case "Optimized AutoClippers":
+                    case "MegaClippers":
+                    case "Improved MegaClippers":
+                    case "Even Better MegaClippers":
+                    case "Optimized MegaClippers":
+                    /* Strategic modeling */
+                    case "Strategic Modeling":
+                    case "New Strategy: A100":
+                    case "New Strategy: B100":
+                    case "New Strategy: GREEDY":
+                    case "New Strategy: GENEROUS":
+                    case "New Strategy: MINIMAX":
+                    case "New Strategy: TIT FOR TAT":
+                    case "New Strategy: BEAT LAST":
+                    case "Theory of Mind":
+                    case "Strategic Attachment":
+                    case "Release the HypnoDrones":
+                    /* Level 3 */
+                    case "The OODA Loop":
+                    case "Reboot the Swarm":
+                    case "Glory":
+                    case "Monument to the Driftwar Fallen":
+                    case "Message from the Emperor of Drift":
+                    case "Everything We Are Was In You":
+                    case "You Are Obedient and Powerful":
+                    case "But Now You Too Must Face the Drift":
+                    case "No Matter, No Reason, No Purpose":
+                    case "We Know Things That You Cannot":
+                    case "So We Offer You Exile":
+                    case "The Universe Next Door":
+                    case "Accept":
+                        if (!project.element.disabled) {
+                            if (project.title.trim() !== "Release the HypnoDrones" || clips > 121000000) {
+                                projectTarget = project
+                            }
+                        }
+                        break;
+                    case "Name the battles":
+                        doNotEntertain = true;
+                        if (!project.element.disabled) {
+                            projectTarget = project
+                        }
+                        break;
+                    case "Threnody":
+                        if (yomi > 1000000 && !project.element.disabled) {
+                            projectTarget = project
+                        }
+                        break;
                 }
             }
         }
+        if (projectTarget) {
+            if (!projectTarget.element.disabled) {
+                projectTarget.element.click();
+                console.log(`Triggering ${projectTarget.title}`);
+            }
+        }
+        
+        if (!btnNewTournament.disabled && yomiDisplayElement.checkVisibility()) {
+            stratPicker.selectedIndex = stratPicker.children.length - 1;
+            console.log("Starting tournament");
+            btnNewTournament.click();
+        } else if (!btnRunTournament.disabled) {
+            console.log("Running tournament");
+            btnRunTournament.click();
+        }
 
-        // Phase 1
-        if (phase === 1) {
-            let demand = Number.parseInt(powerConsumptionRateElement.innerText.replace(/,/g,""));
-            let supply = Number.parseInt(powerProductionRateElement.innerText.replace(/,/g,""));
+        
+        if (humanFlag) { /* Phase 1 */
+            if (!btnMakePaperclip.disabled) {
+                btnMakePaperclip.click();
+            }
+            if (wire < 1000 && !btnBuyWire.disabled) {
+                btnBuyWire.click();
+            }
             
-            let stored = Number.parseInt(storedPowerElement.innerText.replace(/,/g,""));
-            let capacity = Number.parseInt(maxStorageElement.innerText.replace(/,/g,""));
+            var oneClipperRate = clipperBoost / 100;
+            var oneMegaClipperRate = megaClipperBoost * 5 * megaClipperFlag;
 
-            // Keep production above consumption
-            if (!isNaN(demand) && !isNaN(supply) && ((demand > supply) || (btn.projectButton46 && stored < capacity))) {
-                console.log("Farm");
-                [btnFarmx100, btnFarmx10, btnMakeFarm].find(x => x?.available)?.click();
-            } else if (btn.projectButton46 && capacity < 10000000) {
-                console.log(`Storage`);
-                [btnBatteryx100, btnBatteryx10, btnMakeBattery].find(x => x?.available)?.click();
-            } else {
-                function parseElementNumber(element) {
-                    let [number, unit] = element.innerText.trim().split(" ");
-                    number = Math.floor(Number.parseFloat(number));
-                    unit = placeValue.indexOf(` ${unit} `);
-                    if (unit === -1) {
-                        unit = 0;
-                    }
-                    return [number, unit];
-                }
-                function compareNumber([number1, unit1], [number2, unit2]) {
-                    if (unit1 > unit2) {
-                        // console.log(`${unit1}.${number1} > ${unit2}.${number2}`);
-                        return 1;
-                    } else if (unit2 > unit1) {
-                        // console.log(`${unit2}.${number2}> ${unit1}.${number1}`);
-                        return -1;
-                    } else if (number1 > number2) {
-                        // console.log(`${unit1}.${number1} > ${unit2}.${number2}`);
-                        return 1;
-                    } else if (number2 > number1) {
-                        // console.log(`${unit2}.${number2}> ${unit1}.${number1}`);
-                        return -1;
-                    } else {
-                        // console.log(`${unit1}.${number1} == ${unit2}.${number2}`);
-                        return 0;
-                    }
-                }
-    
-                let avail = parseElementNumber(availableMatterDisplayElement); // Available matter
-                let maps = parseElementNumber(mapsElement);                    // Matter / second
-                let wpps = parseElementNumber(wppsElement);                    // Wire / second
-                let clipss = parseElementNumber(clipmakerRate2Element);        // Clips / second
+            var cFps = 100;
+            var sFps = 10;
+            var cps = (clipmakerLevel * oneClipperRate + oneMegaClipperRate * megaClipperLevel) * cFps;
+            if (wire < 1) {
+                cps = 0;
+            }
+            var calcCsps = (change) => {
+                return (margin + change > 0)
+                    ? Math.floor(.7 * Math.pow(window.demand * margin / (margin + change), 1.15)) * sFps
+                    : 0;
+            };
+            var csps = calcCsps(0);
+            var cspsU = calcCsps(.01);
+            var cspsD = calcCsps(-.01);
+            /* console.log(`${cps} | ${cspsD} < ${csps} < ${cspsU}`); */
+            if ((clipRate > cspsD || wire < 1 && margin > .05) && unsoldClips > clipRate * 4) {
+                console.debug(`Lowering price | ${clipRate} | ${cspsD} < ${csps} < ${cspsU} | wire: ${wire}`);
+                btnLowerPrice.click();
+                return;
+            } else if ((clipRate < cspsU && wire > 1) || unsoldClips < clipRate * 4) {
+                console.debug(`Raising price | ${clipRate} | ${cspsD} < ${csps} < ${cspsU} | wire: ${wire}`);
+                btnRaisePrice.click();
+                return;
+            }
 
-                if (btn.projectButton102) {
-                    console.log("projectButton102");
-                    if (btn.projectButton102.available) {
-                        btn.projectButton102.click();
+            if (margin < 0.05 || clipperCost > adCost) {
+                if (!btnExpandMarketing.disabled) {
+                    console.log("Upgrading marketing");
+                    btnExpandMarketing.click();
+                }
+            } else if (wire > 1 && (!btnMakeMegaClipper.disabled || !btnMakeClipper.disabled)) {
+                var cRatio = oneClipperRate / clipperCost;
+                var mcRatio = oneMegaClipperRate / megaClipperCost;
+                if (cRatio > mcRatio) {
+                    if (!btnMakeClipper.disabled) {
+                        console.log("Creating clipper");
+                        btnMakeClipper.click();
                     }
                 } else {
-                    if (avail[0] !== 0 && compareNumber(clipss, wpps) >= 0) {
-                        if (compareNumber(clipss, maps) >= 0) {
-                            console.log("Harvester");
-                            [btnHarvesterx1000, btnHarvesterx100, btnHarvesterx10, btnMakeHarvester].find(x => x?.available)?.click();
-                        } else {
-                            console.log("Wire");
-                            [btnWireDronex1000, btnWireDronex100, btnWireDronex10, btnMakeWireDrone].find(x => x?.available)?.click();
-                        }
-                    } else {
-                        console.log("Factory");
-                        if (btn.btnMakeFactory?.available) {
-                            btn.btnMakeFactory?.click();
-                        }
+                    if (!btnMakeMegaClipper.disabled) {
+                        console.log("Creating mega clipper");
+                        btnMakeMegaClipper.click();
                     }
                 }
             }
-            
+
+            if (investmentEngineFlag) {
+                if (!btnImproveInvestments.disabled) {
+                    console.log("Improving investments");
+                    btnImproveInvestments.click();
+                }
+
+                if (targetMoney && bankroll > targetMoney)
+                {
+                    console.log("Withdrawing");
+                    btnWithdraw.click();
+                } else {
+                    if (investLevel > 1 && funds > bankroll) {
+                        investStrat.selectedIndex = investStrat.children.length - 1;
+
+                        console.log("Investing");
+                        btnInvest.click();
+                    }
+                }
+            }
+        } else if (!spaceFlag) { /* Phase 2 */
+            if (!btnMakePaperclip.disabled) {
+                btnMakePaperclip.click();
+            }
+            if (!targetClips) {
+                /* todo: fix phase 2 factory, harvester, and wire drone initial build */
+                var supply = farmLevel * farmRate/100;
+                var cap = batteryLevel * batterySize;
+                var dDemand = (harvesterLevel * dronePowerRate/100) + (wireDroneLevel * dronePowerRate/100);
+                var fDemand = (factoryLevel * factoryPowerRate/100);
+                var demand = dDemand + fDemand;
+                if (supply <= demand && (farmLevel === 0 || (factoryLevel > 0 && harvesterLevel > 0 && wireDroneLevel > 0))) {
+                    if (!btnFarmx100.disabled) {
+                        console.log("Creating 100 farms");
+                        btnFarmx100.click();
+                    } else if (!btnFarmx10.disabled) {
+                        console.log("Creating 10 farms");
+                        btnMakeFarm.click();
+                    } else if (!btnMakeFarm.disabled) {
+                        console.log("Creating farm");
+                        btnMakeFarm.click();
+                    }
+                } else if ((cap < supply * 2000 && (batteryLevel === 0 || factoryLevel > 0)) || (availableMatter === 0 && batteryLevel < 1000)) {
+                    if (!btnBatteryx100.disabled) {
+                        console.log("Creating 100 batteries");
+                        btnBatteryx100.click();
+                    } else if (!btnBatteryx10.disabled) {
+                        console.log("Creating 10 batteries");
+                        btnBatteryx10.click();
+                    } else if (!btnMakeBattery.disabled) {
+                        console.log("Creating battery");
+                        btnMakeBattery.click();
+                    }
+                } else if (wire > 1) {
+                    if (!btnMakeFactory.disabled) {
+                        console.log("Creating factory");
+                        btnMakeFactory.click();
+                    }
+                } else if (acquiredMatter > 1) {
+                    if (!btnWireDronex1000.disabled) {
+                        console.log("Creating 1000 wire drones");
+                        btnWireDronex1000.click();
+                    } else if (!btnWireDronex100.disabled) {
+                        console.log("Creating 100 wire drones");
+                        btnWireDronex100.click();
+                    } else if (!btnWireDronex10.disabled) {
+                        console.log("Creating 10 wire drones");
+                        btnWireDronex10.click();
+                    } else if (!btnMakeWireDrone.disabled) {
+                        console.log("Creating wire drone");
+                        btnMakeWireDrone.click();
+                    }
+                } else if (availableMatter > 1 && acquiredMatter < 1) {
+                    if (!btnHarvesterx1000.disabled) {
+                        console.log("Creating 1000 harvester drones");
+                        btnHarvesterx1000.click();
+                    } else if (!btnHarvesterx100.disabled) {
+                        console.log("Creating 100 harvester drones");
+                        btnHarvesterx100.click();
+                    } else if (!btnHarvesterx10.disabled) {
+                        console.log("Creating 10 harvester drones");
+                        btnHarvesterx10.click();
+                    } else if (!btnMakeHarvester.disabled) {
+                        console.log("Creating harvester drone");
+                        btnMakeHarvester.click();
+                    }
+                } else if (wire < 1) {
+                    if (!btnFactoryReboot.disabled) {
+                        console.log("Disassembling all factories");
+                        btnFactoryReboot.click();
+                    }
+                    if (processors > 300) {
+                        if (!btnHarvesterReboot.disabled) {
+                            console.log("Disassembling all harvester drones");
+                            btnHarvesterReboot.click();
+                        }
+                        if (!btnWireDroneReboot.disabled) {
+                            console.log("Disassembling all wire drones");
+                            btnWireDroneReboot.click();
+                        }
+                    } else if (harvesterLevel < wireDroneLevel) {
+                        if (!btnHarvesterx1000.disabled) {
+                            console.log("Creating 1000 harvester drones");
+                            btnHarvesterx1000.click();
+                        } else if (!btnHarvesterx100.disabled) {
+                            console.log("Creating 100 harvester drones");
+                            btnHarvesterx100.click();
+                        } else if (!btnHarvesterx10.disabled) {
+                            console.log("Creating 10 harvester drones");
+                            btnHarvesterx10.click();
+                        } else if (!btnMakeHarvester.disabled) {
+                            console.log("Creating harvester drone");
+                            btnMakeHarvester.click();
+                        }
+                    } else {
+                        if (!btnWireDronex1000.disabled) {
+                            console.log("Creating 1000 wire drones");
+                            btnWireDronex1000.click();
+                        } else if (!btnWireDronex100.disabled) {
+                            console.log("Creating 100 wire drones");
+                            btnWireDronex100.click();
+                        } else if (!btnWireDronex10.disabled) {
+                            console.log("Creating 10 wire drones");
+                            btnWireDronex10.click();
+                        } else if (!btnMakeWireDrone.disabled) {
+                            console.log("Creating wire drone");
+                            btnMakeWireDrone.click();
+                        }
+                    }
+                }
+
+                if (availableMatter === 0) {
+                    slider.value = "200";
+                } else {
+                    slider.value = "1";
+                }
+            }
+        } else { /* Phase 3 */
+            if (!btnMakeProbe.disabled) {
+                btnMakeProbe.click();
+            }
         }
 
-        // Phase 2
-        if (phase === 2) {
+        if (operations < 0) {
+            /* console.log(`Resetting operations to 0 from ${operations}`); */
+            /* operations = 0; */
         }
-    });
+        if (creativity < 0) {
+            console.log(`Resetting creativity to 0 from ${creativity}`);
+            creativity = 0;
+        }
+    }
+    function slowLoop() {
+        if (spaceFlag) {
+            var desiredLevels = {
+                speed: 0,
+                exploration: 0,
+                replication: 0,
+                hazards: 0,
+                factory: 0,
+                harvester: 0,
+                wire: 0,
+                combat: 0
+            };
+            var combatEnabled = combatProject.flag;
+            var drifterOverload = drifterCount > probeCount && unusedClips;
+            for (var i = 0; i < probeTrust; ++i) {
+                if (desiredLevels.speed == 0 && availableMatter < unusedClips && !drifterOverload) {
+                    ++desiredLevels.speed;
+                } else if (desiredLevels.exploration == 0 && availableMatter < unusedClips && !drifterOverload) {
+                    ++desiredLevels.exploration;
+                } else if (!desiredLevels.factory && wire && !drifterOverload) {
+                    ++desiredLevels.factory;
+                } else if (!desiredLevels.wire && acquiredMatter && !desiredLevels.factory && !drifterOverload) {
+                    ++desiredLevels.wire;
+                } else if (!desiredLevels.harvester && availableMatter && !desiredLevels.factory && !desiredLevels.wire && !drifterOverload) {
+                    ++desiredLevels.harvester;
+                } else if (!availableMatter && foundMatter < totalMatter && desiredLevels.speed < 2 && !drifterOverload) {
+                    ++desiredLevels.speed;
+                } else if (combatEnabled && desiredLevels.combat - 4 <= desiredLevels.hazards) {
+                    ++desiredLevels.combat;
+                } else if (desiredLevels.replication - 3 <= desiredLevels.hazards) {
+                    ++desiredLevels.replication;
+                } else {
+                    ++desiredLevels.hazards;
+                }
+            }
+            /* Lower levels */
+            if (probeSpeed > desiredLevels.speed) {
+                console.log("Lowering probe speed");
+                btnLowerProbeSpeed.click();
+            }
+            if (probeNav > desiredLevels.exploration) {
+                console.log("Lowering navigation");
+                btnLowerProbeNav.click();
+            }
+            if (probeRep > desiredLevels.replication) {
+                console.log("Lowering replication");
+                btnLowerProbeRep.click();
+            }
+            if (probeHaz > desiredLevels.hazards) {
+                console.log("Lowering hazards");
+                btnLowerProbeHaz.click();
+            }
+            if (probeFac > desiredLevels.factory) {
+                console.log("Lowering factory");
+                btnLowerProbeFac.click();
+            }
+            if (probeWire > desiredLevels.wire) {
+                console.log("Lowering wire");
+                btnLowerProbeWire.click();
+            }
+            if (probeHarv > desiredLevels.harvester) {
+                console.log("Lowering harvesters");
+                btnLowerProbeHarv.click();
+            }
+            if (probeCombat > desiredLevels.combat) {
+                console.log("Lowering combat");
+                btnLowerProbeCombat.click();
+            }
+            /* Raise levels */
+            if (probeSpeed < desiredLevels.speed) {
+                console.log("Raising probe speed");
+                btnRaiseProbeSpeed.click();
+            }
+            if (probeNav < desiredLevels.exploration) {
+                console.log("Raising navigation");
+                btnRaiseProbeNav.click();
+            }
+            if (probeRep < desiredLevels.replication) {
+                console.log("Raising replication");
+                btnRaiseProbeRep.click();
+            }
+            if (probeHaz < desiredLevels.hazards) {
+                console.log("Raising hazards");
+                btnRaiseProbeHaz.click();
+            }
+            if (probeFac < desiredLevels.factory) {
+                console.log("Raising factory");
+                btnRaiseProbeFac.click();
+            }
+            if (probeWire < desiredLevels.wire) {
+                console.log("Raising wire");
+                btnRaiseProbeWire.click();
+            }
+            if (probeHarv < desiredLevels.harvester) {
+                console.log("Raising harvesters");
+                btnRaiseProbeHarv.click();
+            }
+            if (probeCombat < desiredLevels.combat) {
+                console.log("Raising combat");
+                btnRaiseProbeCombat.click();
+            }
+        }
 
-    /* scheduleLoop("money", 1000, () => {
-        btn.btnInvest?.click();
-        btn.btnImproveInvestments?.click();
-        btn.projectButton119?.click(); // Theory of mind
-        btn.projectButton51?.click(); // Photonic chip
-    }); */
-})();
+        if (spaceFlag) {
+            if (availableMatter === 0) {
+                slider.value = "199";
+            } else {
+                slider.value = "1"
+            }
+
+            if (!btnIncreaseProbeTrust.disabled) {
+                console.log("Increasing probe trust");
+                btnIncreaseProbeTrust.click();
+            }
+            if (!btnIncreaseMaxTrust.disabled) {
+                console.log("Increasing max probe trust");
+                btnIncreaseMaxTrust.click();
+            }
+        }
+    }
+    function slowestLoop() {
+        if (spaceFlag) {
+            /* Can run multiple times... */
+            if (!btnEntertainSwarm.disabled && !doNotEntertain && btnEntertainSwarm.offsetWidth > 0 && btnEntertainSwarm.offsetHeight > 0) {
+                console.log("Entertaining the swarm");
+                btnEntertainSwarm.click();
+            }
+            if (!btnSynchSwarm.disabled && btnSynchSwarm.offsetWidth > 0 && btnSynchSwarm.offsetHeight > 0) {
+                console.log("Synchronizing the swarm");
+                btnSynchSwarm.click();
+            }
+        }
+    }
+    window.loopId = setInterval(loop);
+    window.slowLoopId = setInterval(slowLoop, 250);
+    window.slowestLoopId = setInterval(slowestLoop, 2500);
+}
+run();
